@@ -6,9 +6,9 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
    Contacto por WhatsApp y teléfono: 51903307861 (se cambia en la constante WA, al final del archivo, en el bloque de JavaScript).
 
 2. COLORES (solo 3, en todo el sitio):
-   - Color 1: negro  #000     -> fondo y textos sobre verde
-   - Color 2: verde  #34d27b  -> acentos, botones, bordes activos
-   - Color 3: blanco #fff     -> textos y contornos
+   - Color 1: negro  #262626  hsl(0, 0%, 15%)    -> fondo y textos sobre verde
+   - Color 2: verde  #14eb4a  hsl(135, 84%, 50%) -> acentos, botones, bordes activos
+   - Color 3: blanco #e8fded  hsl(135, 84%, 95%) -> textos y contornos
    Los grises/transparencias son el blanco o el verde con opacidad (rgba), no colores nuevos.
    Estilo: modo oscuro.
 
@@ -33,15 +33,15 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hogar Hogareña | Departamentos en alquiler y venta</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg viewBox=%220 0 360 290%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 stroke=%22%2334d27b%22 stroke-width=%229%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath stroke-width=%2217%22 d=%22M16 112 162 20 312 112%22/%3E%3Cpath d=%22M56 124V261H240M274 124V215%22/%3E%3Crect x=%2270%22 y=%22136%22 width=%2288%22 height=%2282%22/%3E%3Cpath d=%22M114 136V218M70 177H158%22/%3E%3Cpath d=%22M190 261V136H254V261%22/%3E%3C/g%3E%3Cpath fill=%22%2334d27b%22 d=%22M236 276C228 270 230 258 240 254C238 244 248 234 260 236C262 218 270 206 288 206C304 206 312 218 310 230C324 226 338 236 336 248C348 252 350 268 340 274C336 278 332 278 326 278Z%22/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg viewBox=%220 0 360 290%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 stroke=%22%2314eb4a%22 stroke-width=%229%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath stroke-width=%2217%22 d=%22M16 112 162 20 312 112%22/%3E%3Cpath d=%22M56 124V261H240M274 124V215%22/%3E%3Crect x=%2270%22 y=%22136%22 width=%2288%22 height=%2282%22/%3E%3Cpath d=%22M114 136V218M70 177H158%22/%3E%3Cpath d=%22M190 261V136H254V261%22/%3E%3C/g%3E%3Cpath fill=%22%2314eb4a%22 d=%22M236 276C228 270 230 258 240 254C238 244 248 234 260 236C262 218 270 206 288 206C304 206 312 218 310 230C324 226 338 236 336 248C348 252 350 268 340 274C336 278 332 278 326 278Z%22/%3E%3C/svg%3E">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --negro:#000; --verde:#34d27b; --blanco:#fff;
-  --linea:rgba(255,255,255,.2); --suave:rgba(255,255,255,.66); --verde-t:rgba(52,210,123,.14);
+  --negro:#262626; --verde:#14eb4a; --blanco:#e8fded;
+  --linea:rgba(232,253,237,.2); --suave:rgba(232,253,237,.66); --verde-t:rgba(20,235,74,.14);
   --display:'Bricolage Grotesque',system-ui,sans-serif; --body:'Instrument Sans',system-ui,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -92,7 +92,7 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 .card:hover,.card.on{border-color:var(--verde)}
 .pic{position:relative;overflow:hidden}
 .pic img,.pic .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph{display:grid;place-items:center;background:repeating-linear-gradient(135deg,rgba(255,255,255,.04) 0 12px,transparent 12px 24px),linear-gradient(160deg,rgba(52,210,123,.3),var(--negro))}
+.ph{display:grid;place-items:center;background:repeating-linear-gradient(135deg,rgba(232,253,237,.04) 0 12px,transparent 12px 24px),linear-gradient(160deg,rgba(20,235,74,.3),var(--negro))}
 .ph span{padding:8px 14px;border:1px dashed var(--suave);border-radius:999px;font-size:13px;color:var(--suave)}
 .badge{position:absolute;z-index:1;left:0;right:0;bottom:0;padding:9px 20px;background:var(--verde);color:var(--negro);font-weight:700;font-size:15px}
 .body{display:flex;flex-direction:column;gap:8px;min-width:0;padding:24px}
@@ -150,7 +150,7 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 
 <header class="top">
   <div class="wrap">
-    <a href="#" class="logo" aria-label="Hogar Hogareña, inicio"><svg width="46" height="37" aria-hidden="true" viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#34d27b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="17" d="M16 112 162 20 312 112"/><path d="M56 124V261H240M274 124V215"/><rect x="70" y="136" width="88" height="82"/><path d="M114 136V218M70 177H158"/><path d="M190 261V136H254V261"/></g><path fill="#34d27b" d="M236 276C228 270 230 258 240 254C238 244 248 234 260 236C262 218 270 206 288 206C304 206 312 218 310 230C324 226 338 236 336 248C348 252 350 268 340 274C336 278 332 278 326 278Z"/></svg>Hogar Hogareña</a>
+    <a href="#" class="logo" aria-label="Hogar Hogareña, inicio"><svg width="46" height="37" aria-hidden="true" viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#14eb4a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="17" d="M16 112 162 20 312 112"/><path d="M56 124V261H240M274 124V215"/><rect x="70" y="136" width="88" height="82"/><path d="M114 136V218M70 177H158"/><path d="M190 261V136H254V261"/></g><path fill="#14eb4a" d="M236 276C228 270 230 258 240 254C238 244 248 234 260 236C262 218 270 206 288 206C304 206 312 218 310 230C324 226 338 236 336 248C348 252 350 268 340 274C336 278 332 278 326 278Z"/></svg>Hogar Hogareña</a>
   </div>
 </header>
 
@@ -200,17 +200,17 @@ select.sq option{background:var(--negro);color:var(--blanco)}
     <aside class="map" aria-label="Mapa de propiedades">
       <div class="canvas">
         <svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <g stroke="rgba(255,255,255,.1)" stroke-width="2" fill="none">
+          <g stroke="rgba(232,253,237,.1)" stroke-width="2" fill="none">
             <path d="M0 80H400M0 170H400M0 250H400M0 430H400M0 520H400M0 610H400M0 700H400"/>
             <path d="M60 0V800M140 0V800M310 0V800M380 0V800"/>
           </g>
-          <rect x="250" y="90" width="110" height="90" rx="18" fill="rgba(52,210,123,.12)"/>
-          <rect x="70" y="560" width="120" height="90" rx="18" fill="rgba(52,210,123,.12)"/>
-          <g stroke="rgba(52,210,123,.55)" stroke-width="5" fill="none" stroke-linecap="round">
+          <rect x="250" y="90" width="110" height="90" rx="18" fill="rgba(20,235,74,.12)"/>
+          <rect x="70" y="560" width="120" height="90" rx="18" fill="rgba(20,235,74,.12)"/>
+          <g stroke="rgba(20,235,74,.55)" stroke-width="5" fill="none" stroke-linecap="round">
             <path d="M0 300C120 270 240 360 400 320"/>
             <path d="M200 0C170 200 250 500 210 800"/>
           </g>
-          <path d="M0 560 400 470" stroke="rgba(255,255,255,.22)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M0 560 400 470" stroke="rgba(232,253,237,.22)" stroke-width="4" fill="none" stroke-linecap="round"/>
         </svg>
         <div id="pins"></div>
       </div>
