@@ -2,11 +2,11 @@
 <!--
 NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
 
-1. MARCA: "Hogar Hogareña". Sitio de una inmobiliaria con listado de propiedades.
+1. MARCA: "Hogar Hogareña". Sitio de una inmobiliaria con listado de propiedades en Lima.
    Contacto por WhatsApp y teléfono: 51903307861 (se cambia en la constante WA, al final del archivo, en el bloque de JavaScript).
 
 2. COLORES (solo 3, en todo el sitio):
-   - Color 1: negro  #262626  hsl(0, 0%, 15%)    -> fondo y textos sobre verde
+   - Color 1: negro  #1a1a1a  hsl(0, 0%, 10%)    -> fondo y textos sobre verde
    - Color 2: verde  #14eb4a  hsl(135, 84%, 50%) -> acentos, botones, bordes activos
    - Color 3: blanco #e8fded  hsl(135, 84%, 95%) -> textos y contornos
    Los grises/transparencias son el blanco o el verde con opacidad (rgba), no colores nuevos.
@@ -15,16 +15,31 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
 3. DISEÑO (basado en la captura de referencia):
    - Barra de filtros: Ubicaciones, Alquilar/Comprar, Departamento (antes "Inmueble"), Precio y Más filtros.
      Los 5 tienen el mismo tamaño y forma squircle, con su ícono pegado a la derecha.
-   - Debajo: cantidad de resultados, botones "Crear alerta" y "Ordenar", y la lista de propiedades.
+   - Debajo: cantidad de resultados, botón "Ordenar" y la lista de propiedades.
    - Mapa a la derecha: alto, pegado (sticky) y ocupa todo el alto de la pantalla.
+   - Línea de la cabecera y botón de llamada: color 3 (blanco). El botón de WhatsApp sigue en verde.
+   - Tarjeta de arriba (#sel): muestra la propiedad del mapa. Cambia con solo pasar el mouse por un precio
+     (o tocarlo), sin necesidad de seleccionarlo; la última queda elegida (pin verde) hasta pasar por otro.
+     La página nunca se desplaza por esto: el contenedor conserva su alto para que lo de abajo no se mueva.
+     Las tarjetas de abajo (#list) son todo lo que se publica; la de arriba solo es una vista de la elegida.
+     Al abrir la página muestra la primera de la lista. Si la elegida queda fuera por los filtros, pasa a
+     mostrar la primera que quede.
+   - Al pasar el mouse por una tarjeta de abajo se resalta su pin en el mapa.
+   - Se quitaron: el botón "Crear alerta", la franja verde de la foto (ej. "Entrega inmediata")
+     y la etiqueta "Destacado".
 
-4. PROPIEDADES: están en la lista `props` del JavaScript final. Los datos son de ejemplo; reemplázalos por los reales.
-   Cada una usa una imagen (depto1.webp ... depto6.webp). Sin imagen se ve un recuadro de aviso.
-   Los filtros funcionan con esos datos (tipo, alquiler/venta, precio máximo, ubicación y comodidades).
-   Los pines del mapa salen de `pin: [x%, y%]`. Es un mapa dibujado, no usa servicios externos.
+4. MAPA REAL: usa Leaflet (cdnjs) con mapa oscuro de CARTO sobre datos de OpenStreetMap.
+   Centro: Lima (CENTRO = [-12.0464, -77.0428]), zoom 12. Necesita internet para cargar el mapa.
+   Cada propiedad lleva sus coordenadas `lat` y `lng`; de ahí salen los pines con precio.
+   Los mapas de CARTO/OSM son gratis para uso liviano; si la web tiene mucho tráfico conviene
+   revisar sus condiciones de uso o cambiar de proveedor.
    El botón "Ver mapa" abre Google Maps en otra pestaña.
 
-5. SECCIONES ANTERIORES: la versión anterior tenía 3 secciones (captar propietarios, conseguir
+5. PROPIEDADES: están en la lista `props` del JavaScript final. Los datos son de ejemplo; reemplázalos por los reales.
+   Cada una usa una imagen (depto1.webp ... depto6.webp). Sin imagen se ve un recuadro de aviso.
+   Los filtros funcionan con esos datos (tipo, alquiler/venta, precio máximo, ubicación y comodidades).
+
+6. SECCIONES ANTERIORES: la versión anterior tenía 3 secciones (captar propietarios, conseguir
    compradores, conseguir inquilinos) dentro de una página de venta. Esta versión las reemplaza
    por el listado de propiedades.
 -->
@@ -38,9 +53,10 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
 :root{
-  --negro:#262626; --verde:#14eb4a; --blanco:#e8fded;
+  --negro:#1a1a1a; --verde:#14eb4a; --blanco:#e8fded;
   --linea:rgba(232,253,237,.2); --suave:rgba(232,253,237,.66); --verde-t:rgba(20,235,74,.14);
   --display:'Bricolage Grotesque',system-ui,sans-serif; --body:'Instrument Sans',system-ui,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -54,7 +70,7 @@ button{font:inherit;color:inherit}
 .wrap{width:min(1320px,100% - 48px);margin-inline:auto}
 
 /* cabecera */
-.top{border-bottom:1px solid var(--verde)}
+.top{border-bottom:1px solid var(--blanco)}
 .top .wrap{height:72px;display:flex;align-items:center}
 .logo{display:flex;align-items:center;gap:12px;font:800 24px var(--display);letter-spacing:-.03em}
 
@@ -84,17 +100,22 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 .ob{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 18px;cursor:pointer;background:var(--negro);
   border:1px solid var(--linea);border-radius:16px;corner-shape:squircle;font-weight:600;transition:border-color .2s}
 .ob:hover{border-color:var(--verde)}
-.ob.v{border-color:var(--verde)}
 .ob svg{width:20px;height:20px}
 .list{display:grid;gap:20px}
 .card{position:relative;display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);min-height:340px;overflow:hidden;
   border:1px solid var(--linea);border-radius:28px;corner-shape:squircle;transition:border-color .2s}
 .card:hover,.card.on{border-color:var(--verde)}
+.card.on{box-shadow:0 0 0 1px var(--verde)}
+#sel{margin-bottom:28px}
+#sel[hidden]{display:none}
+.card.top{border-color:var(--verde);scroll-margin-top:20px}
+.card.cambia{animation:entra .3s ease}
+@keyframes entra{from{opacity:.4}to{opacity:1}}
+.selnota{margin:0;color:var(--verde);font-weight:600;font-size:14px}
 .pic{position:relative;overflow:hidden}
 .pic img,.pic .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph{display:grid;place-items:center;background:repeating-linear-gradient(135deg,rgba(232,253,237,.04) 0 12px,transparent 12px 24px),linear-gradient(160deg,rgba(20,235,74,.3),var(--negro))}
 .ph span{padding:8px 14px;border:1px dashed var(--suave);border-radius:999px;font-size:13px;color:var(--suave)}
-.badge{position:absolute;z-index:1;left:0;right:0;bottom:0;padding:9px 20px;background:var(--verde);color:var(--negro);font-weight:700;font-size:15px}
 .body{display:flex;flex-direction:column;gap:8px;min-width:0;padding:24px}
 .eyebrow{margin:0;color:var(--suave);font-size:14px}
 .price{margin:0;font:800 34px/1.05 var(--display);letter-spacing:-.03em}
@@ -104,12 +125,10 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .chips span{padding:2px 12px;border:1px solid var(--linea);border-radius:8px;font-size:13px}
 .desc{margin:4px 0 0;color:var(--suave);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:16px;border-top:1px solid var(--linea)}
-.dest{display:inline-flex;align-items:center;gap:8px;color:var(--verde);font-weight:600;font-size:14px}
-.dest::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--verde)}
+.foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:16px;border-top:1px solid var(--linea)}
 .acts{display:flex;gap:10px}
 .ib,.wa{height:50px;border-radius:16px;corner-shape:squircle}
-.ib{width:50px;display:grid;place-items:center;border:1px solid var(--verde);color:var(--verde)}
+.ib{width:50px;display:grid;place-items:center;border:1px solid var(--blanco);color:var(--blanco)}
 .wa{display:inline-flex;align-items:center;gap:10px;padding:0 20px;background:var(--verde);color:var(--negro);font-weight:700}
 .ib svg,.wa svg{width:22px;height:22px}
 .heart{position:absolute;top:18px;right:20px;display:grid;place-items:center;width:36px;height:36px;padding:0;background:none;border:0;cursor:pointer}
@@ -118,16 +137,23 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 .vacio{padding:48px 24px;text-align:center;border:1px dashed var(--linea);border-radius:28px;corner-shape:squircle;color:var(--suave)}
 .vacio a{color:var(--verde);font-weight:600}
 
-/* mapa alto y pegado */
-.map{position:sticky;top:20px;display:flex;flex-direction:column;height:calc(100vh - 40px);min-height:520px;overflow:hidden;
+/* mapa real, alto y pegado */
+.map{position:sticky;top:20px;isolation:isolate;display:flex;flex-direction:column;height:calc(100vh - 40px);min-height:520px;overflow:hidden;
   border:1px solid var(--linea);border-radius:28px;corner-shape:squircle}
-.canvas{position:relative;flex:1;background:var(--negro)}
-.canvas svg{position:absolute;inset:0;width:100%;height:100%}
-.pin{position:absolute;translate:-50% -100%;padding:5px 11px;border-radius:999px;background:var(--blanco);color:var(--negro);font:700 13px var(--body);white-space:nowrap;transition:background .2s,scale .2s}
-.pin::after{content:"";position:absolute;left:50%;bottom:-5px;translate:-50% 0;border:6px solid transparent;border-bottom:0;border-top-color:inherit}
-.pin.on{background:var(--verde);scale:1.12;z-index:2}
-.pin.on::after{border-top-color:var(--verde)}
-.pin:not(.on)::after{border-top-color:var(--blanco)}
+.canvas{position:relative;flex:1;min-height:0;background:var(--negro)}
+#mapa{position:absolute;inset:0;background:var(--negro);font-family:var(--body)}
+.pinwrap{background:none;border:0}
+.pin{position:absolute;left:0;top:0;translate:-50% calc(-100% - 7px);padding:5px 11px;border-radius:999px;background:var(--blanco);color:var(--negro);font:700 13px var(--body);white-space:nowrap;cursor:pointer;transition:background .2s,scale .2s}
+.pin::after{content:"";position:absolute;left:50%;bottom:-5px;translate:-50% 0;border:6px solid transparent;border-bottom:0;border-top-color:var(--blanco)}
+.pin.on,.pin:hover{background:var(--verde);scale:1.12}
+.pin.on::after,.pin:hover::after{border-top-color:var(--verde)}
+.pin.sel{background:var(--verde)}
+.pin.sel::after{border-top-color:var(--verde)}
+.leaflet-bar,.leaflet-bar a{border-color:var(--linea)!important}
+.leaflet-bar a{background:var(--negro)!important;color:var(--blanco)!important}
+.leaflet-bar a:hover{color:var(--verde)!important}
+.leaflet-control-attribution{background:rgba(26,26,26,.85)!important;color:var(--suave)!important}
+.leaflet-control-attribution a{color:var(--verde)!important}
 .vm{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-top:1px solid var(--linea);font-weight:700;transition:color .2s}
 .vm:hover{color:var(--verde)}
 .vm svg{width:20px;height:20px}
@@ -143,7 +169,7 @@ select.sq option{background:var(--negro);color:var(--blanco)}
   .pic{min-height:230px}
   .price{font-size:30px}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.card.cambia{animation:none}}
 </style>
 </head>
 <body>
@@ -187,10 +213,10 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 
   <div class="layout">
     <section aria-label="Resultados">
+      <div id="sel" hidden aria-live="polite"></div>
       <div class="bar">
         <h1 id="titulo" aria-live="polite"></h1>
         <div class="btns">
-          <button class="ob v" id="alerta" type="button">Crear alerta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
           <button class="ob" id="orden" type="button"><span id="ordenT">Ordenar</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg></button>
         </div>
       </div>
@@ -198,41 +224,28 @@ select.sq option{background:var(--negro);color:var(--blanco)}
     </section>
 
     <aside class="map" aria-label="Mapa de propiedades">
-      <div class="canvas">
-        <svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <g stroke="rgba(232,253,237,.1)" stroke-width="2" fill="none">
-            <path d="M0 80H400M0 170H400M0 250H400M0 430H400M0 520H400M0 610H400M0 700H400"/>
-            <path d="M60 0V800M140 0V800M310 0V800M380 0V800"/>
-          </g>
-          <rect x="250" y="90" width="110" height="90" rx="18" fill="rgba(20,235,74,.12)"/>
-          <rect x="70" y="560" width="120" height="90" rx="18" fill="rgba(20,235,74,.12)"/>
-          <g stroke="rgba(20,235,74,.55)" stroke-width="5" fill="none" stroke-linecap="round">
-            <path d="M0 300C120 270 240 360 400 320"/>
-            <path d="M200 0C170 200 250 500 210 800"/>
-          </g>
-          <path d="M0 560 400 470" stroke="rgba(232,253,237,.22)" stroke-width="4" fill="none" stroke-linecap="round"/>
-        </svg>
-        <div id="pins"></div>
-      </div>
-      <a class="vm" href="https://www.google.com/maps/search/departamentos+en+alquiler+Huancayo" target="_blank" rel="noopener">Ver mapa
+      <div class="canvas"><div id="mapa" role="application" aria-label="Mapa de Lima con las propiedades"></div></div>
+      <a class="vm" href="https://www.google.com/maps/search/departamentos+en+alquiler+Lima" target="_blank" rel="noopener">Ver mapa
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
     </aside>
   </div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const WA='51903307861';
+const CENTRO=[-12.0464,-77.0428]; // centro de Lima
 const props=[
- {id:1,img:'depto1.webp',op:'alquiler',tipo:'Departamento',precio:1350,mon:'S/',un:12,dorm:'1 a 2 dorm.',m2:'45 a 61 m² tot.',dir:'Av. Giráldez 480',zona:'Huancayo, Junín',am:['Gimnasio','Piscina','Parrilla','Áreas verdes'],desc:'Departamentos de 1 y 2 dormitorios diseñados para brindar comodidad, ubicación y seguridad en el centro de la ciudad.',badge:'Entrega inmediata',dest:'Destacado',pin:[38,24]},
- {id:2,img:'depto2.webp',op:'alquiler',tipo:'Departamento',precio:1600,mon:'S/',un:8,dorm:'2 dorm.',m2:'58 a 64 m² tot.',dir:'Jr. Ancash 1125',zona:'El Tambo, Huancayo',am:['Gimnasio','Parrilla'],desc:'Ven a conocer nuestros departamentos de estreno de 2 dormitorios con balcón y excelente iluminación natural.',badge:'Estreno',dest:'Destacado',pin:[62,38]},
- {id:3,img:'depto3.webp',op:'alquiler',tipo:'Departamento',precio:1200,mon:'S/',un:20,dorm:'1 dorm.',m2:'38 a 45 m² tot.',dir:'Calle Real 760',zona:'Huancayo, Junín',am:['Áreas verdes'],desc:'Departamentos de 1 dormitorio, ideales para una persona o pareja, cerca de universidades y comercios.',badge:'',dest:'',pin:[26,52]},
- {id:4,img:'depto4.webp',op:'alquiler',tipo:'Departamento',precio:2100,mon:'S/',un:6,dorm:'3 dorm.',m2:'85 a 98 m² tot.',dir:'Av. Ferrocarril 2310',zona:'Chilca, Huancayo',am:['Piscina','Parrilla','Áreas verdes'],desc:'Amplios departamentos familiares de 3 dormitorios con cochera y zona de parrillas en la azotea.',badge:'Entrega inmediata',dest:'Destacado',pin:[70,66]},
- {id:5,img:'depto5.webp',op:'venta',tipo:'Departamento',precio:78000,mon:'US$',un:10,dorm:'2 dorm.',m2:'60 a 72 m² tot.',dir:'Av. Mariscal Castilla 915',zona:'El Tambo, Huancayo',am:['Gimnasio','Áreas verdes'],desc:'Departamentos en venta con acabados modernos y facilidades de pago con crédito hipotecario.',badge:'En construcción',dest:'Destacado',pin:[44,36]},
- {id:6,img:'depto6.webp',op:'venta',tipo:'Casa',precio:145000,mon:'US$',un:1,dorm:'4 dorm.',m2:'180 m² tot.',dir:'Urb. Los Jardines, Mz. B',zona:'Huancayo, Junín',am:['Parrilla','Áreas verdes'],desc:'Casa de dos pisos con jardín, cochera para dos autos y terraza con parrilla.',badge:'',dest:'',pin:[58,72]}
+ {id:1,img:'depto1.webp',op:'alquiler',tipo:'Departamento',precio:2350,mon:'S/',un:12,dorm:'1 a 2 dorm.',m2:'45 a 61 m² tot.',dir:'Av. Brasil 1840',zona:'Jesús María, Lima',am:['Gimnasio','Piscina','Parrilla','Áreas verdes'],desc:'Departamentos de 1 y 2 dormitorios diseñados para brindar comodidad, ubicación y seguridad cerca del centro de Lima.',lat:-12.0700,lng:-77.0530},
+ {id:2,img:'depto2.webp',op:'alquiler',tipo:'Departamento',precio:2800,mon:'S/',un:8,dorm:'2 dorm.',m2:'58 a 64 m² tot.',dir:'Av. Larco 1150',zona:'Miraflores, Lima',am:['Gimnasio','Parrilla'],desc:'Ven a conocer nuestros departamentos de estreno de 2 dormitorios con balcón y excelente iluminación natural.',lat:-12.1190,lng:-77.0300},
+ {id:3,img:'depto3.webp',op:'alquiler',tipo:'Departamento',precio:1900,mon:'S/',un:20,dorm:'1 dorm.',m2:'38 a 45 m² tot.',dir:'Jr. Cusco 450',zona:'Cercado de Lima, Lima',am:['Áreas verdes'],desc:'Departamentos de 1 dormitorio, ideales para una persona o pareja, cerca de universidades y comercios.',lat:-12.0453,lng:-77.0311},
+ {id:4,img:'depto4.webp',op:'alquiler',tipo:'Departamento',precio:3600,mon:'S/',un:6,dorm:'3 dorm.',m2:'85 a 98 m² tot.',dir:'Av. Camino Real 1050',zona:'San Isidro, Lima',am:['Piscina','Parrilla','Áreas verdes'],desc:'Amplios departamentos familiares de 3 dormitorios con cochera y zona de parrillas en la azotea.',lat:-12.1000,lng:-77.0380},
+ {id:5,img:'depto5.webp',op:'venta',tipo:'Departamento',precio:135000,mon:'US$',un:10,dorm:'2 dorm.',m2:'60 a 72 m² tot.',dir:'Av. Sucre 760',zona:'Magdalena del Mar, Lima',am:['Gimnasio','Áreas verdes'],desc:'Departamentos en venta con acabados modernos y facilidades de pago con crédito hipotecario.',lat:-12.0900,lng:-77.0710},
+ {id:6,img:'depto6.webp',op:'venta',tipo:'Casa',precio:320000,mon:'US$',un:1,dorm:'4 dorm.',m2:'180 m² tot.',dir:'Jr. Domeyer 280',zona:'Barranco, Lima',am:['Parrilla','Áreas verdes'],desc:'Casa de dos pisos con jardín, cochera para dos autos y terraza con parrilla.',lat:-12.1400,lng:-77.0200}
 ];
 const plural={Departamento:'departamentos',Casa:'casas',Terreno:'terrenos','Local comercial':'locales comerciales'};
-const montos={alquiler:[['Precio',0],['Hasta S/ 1,500',1500],['Hasta S/ 2,000',2000],['Hasta S/ 3,000',3000]],
-              venta:[['Precio',0],['Hasta US$ 100,000',100000],['Hasta US$ 150,000',150000],['Hasta US$ 200,000',200000]]};
+const montos={alquiler:[['Precio',0],['Hasta S/ 2,000',2000],['Hasta S/ 3,000',3000],['Hasta S/ 4,000',4000]],
+              venta:[['Precio',0],['Hasta US$ 150,000',150000],['Hasta US$ 250,000',250000],['Hasta US$ 400,000',400000]]};
 const I={
  heart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/></svg>',
  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
@@ -240,29 +253,67 @@ const I={
 };
 const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('en-US');
-let orden=0, fav=new Set();
+const wa=t=>'https://wa.me/'+WA+'?text='+encodeURIComponent(t);
+let orden=0, fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
+
+/* mapa real: Leaflet + mapa oscuro de CARTO (datos de OpenStreetMap), centrado en Lima */
+function iniciarMapa(){
+  if(!window.L)return;
+  mapa=L.map('mapa',{center:CENTRO,zoom:12,dragging:!L.Browser.mobile});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'}).addTo(mapa);
+  capa=L.layerGroup().addTo(mapa);
+  setTimeout(()=>mapa.invalidateSize(),0);
+  addEventListener('resize',()=>{mapa.invalidateSize();$('#sel').style.minHeight=''});
+}
+function pintar(r){
+  if(!mapa)return;
+  capa.clearLayers();marcas={};
+  r.forEach(p=>{
+    const m=L.marker([p.lat,p.lng],{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="pin">${p.mon} ${fmt(p.precio)}</span>`})}).addTo(capa);
+    const pin=m.getElement().querySelector('.pin');
+    if(p.id===selId)pin.classList.add('sel');
+    // al pasar el mouse (o tocar) un precio, la tarjeta de arriba cambia a esa propiedad; la página no se mueve
+    pin.addEventListener('pointerenter',()=>elegir(p.id));
+    m.on('click',()=>elegir(p.id));
+    marcas[p.id]=m;
+  });
+}
+function resaltar(id,on){
+  const m=marcas[id];if(!m)return;
+  const el=m.getElement();if(el&&el.querySelector('.pin'))el.querySelector('.pin').classList.toggle('on',on);
+  m.setZIndexOffset(on?1000:0);
+}
+
+/* tarjeta de arriba: la propiedad elegida en el mapa */
+function elegir(id){
+  if(id===selId)return;
+  selId=id;
+  Object.keys(marcas).forEach(k=>{const el=marcas[k].getElement().querySelector('.pin');if(el)el.classList.toggle('sel',+k===id)});
+  mostrarSel(true);
+}
+function mostrarSel(animar){
+  const box=$('#sel'),p=visibles.find(x=>x.id===selId);
+  box.hidden=!p;
+  box.innerHTML=p?cardHTML(p,true):'';
+  if(p&&animar)box.firstElementChild.classList.add('cambia');
+  // el contenedor conserva el alto mayor visto, así la lista de abajo no se mueve al cambiar de propiedad
+  box.style.minHeight=p?Math.max(parseFloat(box.style.minHeight)||0,box.offsetHeight)+'px':'';
+}
 
 function opcionesPrecio(){
   $('#precio').innerHTML=montos[$('#op').value].map(([t,v])=>`<option value="${v}">${t}</option>`).join('');
 }
-function wa(t){return 'https://wa.me/'+WA+'?text='+encodeURIComponent(t)}
 
-function render(){
-  const op=$('#op').value, tipo=$('#tipo').value, max=+$('#precio').value, q=$('#ubi').value.trim().toLowerCase();
-  const am=[...document.querySelectorAll('.chip input:checked')].map(i=>i.value);
-  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!max||p.precio<=max)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
-  if(orden)r.sort((a,b)=>(a.precio-b.precio)*orden);
-  const nom=r.length===1?tipo.toLowerCase():plural[tipo];
-  $('#titulo').textContent=`${r.length} ${nom} en ${op} en Huancayo, Junín`;
-  $('#list').innerHTML=r.length?r.map(p=>`
-    <article class="card" data-id="${p.id}">
+const cardHTML=(p,top)=>`
+    <article class="card${top?' top':''}" data-pid="${p.id}"${top?'':` data-id="${p.id}"`}>
       <div class="pic">
         <div class="ph"><span>IMAGEN: ${p.img}</span></div>
         <img src="${p.img}" alt="${p.tipo} en ${p.zona}" loading="lazy" onload="this.previousElementSibling&&this.previousElementSibling.remove()" onerror="this.remove()">
-        ${p.badge?`<div class="badge">${p.badge}</div>`:''}
       </div>
       <div class="body">
         <button class="heart" type="button" aria-label="Guardar en favoritos" aria-pressed="${fav.has(p.id)}">${I.heart}</button>
+        ${top?'<p class="selnota">Seleccionado en el mapa</p>':''}
         <p class="eyebrow">${plural[p.tipo]} desde</p>
         <p class="price">${p.mon} ${fmt(p.precio)}</p>
         <div class="spec"><span>${p.un} un.</span><span>${p.dorm}</span><span>${p.m2}</span></div>
@@ -271,32 +322,43 @@ function render(){
         <div class="chips">${p.am.map(a=>`<span>${a}</span>`).join('')}</div>
         <p class="desc">${p.desc}</p>
         <div class="foot">
-          <span class="dest">${p.dest}</span>
           <div class="acts">
             <a class="ib" href="tel:+${WA}" aria-label="Llamar">${I.phone}</a>
             <a class="wa" href="${wa(`Hola, me interesa el ${p.tipo.toLowerCase()} en ${p.op}: ${p.dir}, ${p.zona}`)}" target="_blank" rel="noopener">WhatsApp ${I.wa}</a>
           </div>
         </div>
       </div>
-    </article>`).join(''):
-    `<div class="vacio">No hay propiedades con estos filtros. Cambia la búsqueda o <a href="${wa('Hola, busco una propiedad y no la encuentro en la página')}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>.</div>`;
-  $('#pins').innerHTML=r.map(p=>`<span class="pin" data-id="${p.id}" style="left:${p.pin[0]}%;top:${p.pin[1]}%">${p.mon} ${fmt(p.precio)}</span>`).join('');
+    </article>`;
+
+function render(){
+  const op=$('#op').value, tipo=$('#tipo').value, max=+$('#precio').value, q=$('#ubi').value.trim().toLowerCase();
+  const am=[...document.querySelectorAll('.chip input:checked')].map(i=>i.value);
+  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!max||p.precio<=max)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
+  if(orden)r.sort((a,b)=>(a.precio-b.precio)*orden);
+  visibles=r;
+  if(!r.some(x=>x.id===selId))selId=r.length?r[0].id:null;
+  const nom=r.length===1?tipo.toLowerCase():plural[tipo];
+  $('#titulo').textContent=`${r.length} ${nom} en ${op} en Lima`;
+  $('#list').innerHTML=r.length?r.map(p=>cardHTML(p,false)).join(''):
+    `<div class="vacio">No hay propiedades con estos filtros. Cambia la búsqueda o <a href="${wa('Hola, busco una propiedad en Lima y no la encuentro en la página')}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>.</div>`;
+  pintar(r);
+  mostrarSel(false);
 }
 
-opcionesPrecio();render();
+iniciarMapa();opcionesPrecio();render();
 $('#op').addEventListener('change',()=>{opcionesPrecio();render()});
 ['#tipo','#precio'].forEach(s=>$(s).addEventListener('change',render));
 $('#ubi').addEventListener('input',render);
 document.querySelectorAll('.chip input').forEach(i=>i.addEventListener('change',render));
 $('#mas').addEventListener('click',e=>{const on=$('#more').classList.toggle('on');e.currentTarget.setAttribute('aria-expanded',on)});
-$('#orden').addEventListener('click',()=>{orden=orden===0?1:orden===1?-1:0;$('#ordenT').textContent=['Ordenar','Menor precio','Mayor precio'][orden===0?0:orden===1?1:2];render()});
-$('#alerta').addEventListener('click',()=>open(wa(`Hola, quiero crear una alerta de ${$('#tipo').value.toLowerCase()} en ${$('#op').value} en Huancayo`),'_blank'));
-$('#list').addEventListener('click',e=>{const h=e.target.closest('.heart');if(!h)return;
-  const id=+h.closest('.card').dataset.id;fav.has(id)?fav.delete(id):fav.add(id);h.setAttribute('aria-pressed',fav.has(id))});
-// al pasar por una tarjeta se resalta su pin en el mapa
-function pin(id,on){const p=document.querySelector(`.pin[data-id="${id}"]`);if(p)p.classList.toggle('on',on)}
-$('#list').addEventListener('pointerover',e=>{const c=e.target.closest('.card');if(c)pin(c.dataset.id,true)});
-$('#list').addEventListener('pointerout',e=>{const c=e.target.closest('.card');if(c)pin(c.dataset.id,false)});
+$('#orden').addEventListener('click',()=>{orden=orden===0?1:orden===1?-1:0;$('#ordenT').textContent=['Ordenar','Menor precio','Mayor precio'][orden===-1?2:orden];render()});
+// favoritos: funciona en la tarjeta de arriba y en las de abajo
+document.addEventListener('click',e=>{const h=e.target.closest('.heart');if(!h)return;
+  const id=+h.closest('.card').dataset.pid;fav.has(id)?fav.delete(id):fav.add(id);
+  document.querySelectorAll(`.card[data-pid="${id}"] .heart`).forEach(x=>x.setAttribute('aria-pressed',fav.has(id)))});
+// al pasar por una tarjeta de la lista se resalta su pin en el mapa
+$('#list').addEventListener('pointerover',e=>{const c=e.target.closest('.card');if(c&&!(e.relatedTarget&&c.contains(e.relatedTarget)))resaltar(c.dataset.id,true)});
+$('#list').addEventListener('pointerout',e=>{const c=e.target.closest('.card');if(c&&!(e.relatedTarget&&c.contains(e.relatedTarget)))resaltar(c.dataset.id,false)});
 </script>
 </body>
 </html>
