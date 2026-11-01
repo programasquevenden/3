@@ -19,6 +19,9 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
      un squircle solo con las opciones (sin título), el ∨ pasa a ∧ y al elegir se cierra. Más filtros permite
      marcar varias comodidades y queda abierto. Al seleccionar un filtro solo cambia el color del borde
      (no hay segundo contorno). Se maneja también con teclado (flechas y Esc).
+   - Precio: al abrirlo sale "Cualquier precio" y debajo la moneda (USD primero, Soles a la derecha; por defecto USD)
+     y dos casillas Desde / Hasta. Solo aceptan números. "Cualquier precio" sigue elegido hasta que se escribe un monto y se pulsa "Ver resultados" (el rango no filtra antes). Al hacer clic en una casilla desaparece su texto guía y su
+     borde pasa a color 3 (blanco). Si la propiedad está en otra moneda se convierte con el tipo de cambio TC (en el JavaScript).
    - Debajo: cantidad de resultados, botón "Ordenar" y la lista de propiedades.
    - "Ordenar" es un desplegable del mismo estilo que los filtros, con 2 opciones: Menor precio y Mayor precio.
      El texto del botón siempre dice "Ordenar" (no cambia). Por defecto está elegido Mayor precio.
@@ -112,6 +115,22 @@ button{font:inherit;color:inherit}
 .opt[aria-selected="true"] .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
 .opt[aria-selected="true"] .check{border-color:var(--verde);background:var(--verde)}
 .opt[aria-selected="true"] .check::after{content:"";width:6px;height:11px;margin-top:-2px;border:solid var(--negro);border-width:0 2.5px 2.5px 0;rotate:45deg}
+/* panel de Precio: moneda (USD / Soles) y casillas Desde / Hasta */
+#dd-precio .panel{min-width:280px}
+#dd-tipo .panel{max-height:calc(100vh - 110px);overflow-y:auto;overscroll-behavior:contain} /* salen todos los tipos; solo en pantallas muy bajas aparece scroll */
+.mons{display:flex;gap:22px;padding:10px 14px 6px}
+.mo{display:flex;align-items:center;gap:10px;padding:0;border:0;background:none;color:var(--blanco);font:500 16px var(--body);cursor:pointer}
+.mo[aria-selected="true"] .radio{border-color:var(--verde)}
+.mo[aria-selected="true"] .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
+.rango{display:flex;gap:10px;padding:6px 6px 8px}
+.num{flex:1 1 0;min-width:0;width:100%;height:52px;padding:0 14px;background:var(--negro);color:var(--blanco);border:1px solid var(--linea);
+  border-radius:16px;corner-shape:squircle;font:500 16px var(--body);appearance:none;-webkit-appearance:none;transition:border-color .2s}
+.ver{display:block;width:calc(100% - 12px);height:48px;margin:0 6px 6px;cursor:pointer;background:var(--negro);color:var(--blanco);border:1px solid var(--blanco);border-radius:14px;corner-shape:squircle;font:600 16px var(--body);transition:background .2s}
+.ver:hover,.ver:focus-visible{background:rgba(232,253,237,.08);outline:none}
+.num::placeholder{color:var(--suave);opacity:1}
+/* al hacer clic: el texto guía desaparece y el borde pasa a color 3 */
+.num:focus,.num:focus-visible{outline:none;border-color:var(--blanco)}
+.num:focus::placeholder{color:transparent}
 
 /* cuerpo */
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start;padding-bottom:64px}
@@ -185,6 +204,7 @@ button{font:inherit;color:inherit}
   .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
   .filters .f:first-child{grid-column:1/-1}
   .filters .f:nth-child(n+3):nth-child(odd) .panel{left:auto;right:0}
+  #dd-precio .panel{left:auto;right:0}
 }
 @media(max-width:640px){
   .card{grid-template-columns:1fr}
@@ -219,9 +239,20 @@ button{font:inherit;color:inherit}
       <div class="panel" role="listbox" aria-label="Tipo de propiedad"></div>
     </div>
     <div class="f dd" id="dd-precio">
-      <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Precio"><span class="lbl"></span></button>
+      <button class="sq" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Precio"><span class="lbl"></span></button>
       <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      <div class="panel" role="listbox" aria-label="Precio"></div>
+      <div class="panel" role="group" aria-label="Precio">
+        <button class="opt" type="button" id="p-any" role="option" aria-selected="true"><span class="radio"></span>Cualquier precio</button>
+        <div class="mons" role="radiogroup" aria-label="Moneda">
+          <button class="mo" type="button" role="radio" data-m="USD" aria-selected="true"><span class="radio"></span>USD</button>
+          <button class="mo" type="button" role="radio" data-m="PEN" aria-selected="false"><span class="radio"></span>Soles</button>
+        </div>
+        <div class="rango">
+          <input class="num" id="p-desde" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" placeholder="Desde" autocomplete="off" aria-label="Precio desde">
+          <input class="num" id="p-hasta" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" placeholder="Hasta" autocomplete="off" aria-label="Precio hasta">
+        </div>
+        <button class="ver" type="button" id="p-ver">Ver resultados</button>
+      </div>
     </div>
     <div class="f dd" id="dd-mas">
       <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Más filtros"><span class="lbl"></span></button>
@@ -265,9 +296,8 @@ const props=[
  {id:5,img:'depto5.webp',op:'venta',tipo:'Departamento',precio:135000,mon:'US$',un:10,dorm:'2 dorm.',m2:'60 a 72 m² tot.',dir:'Av. Sucre 760',zona:'Magdalena del Mar, Lima',am:['Gimnasio','Áreas verdes'],desc:'Departamentos en venta con acabados modernos y facilidades de pago con crédito hipotecario.',lat:-12.0900,lng:-77.0710},
  {id:6,img:'depto6.webp',op:'venta',tipo:'Casa',precio:320000,mon:'US$',un:1,dorm:'4 dorm.',m2:'180 m² tot.',dir:'Jr. Domeyer 280',zona:'Barranco, Lima',am:['Parrilla','Áreas verdes'],desc:'Casa de dos pisos con jardín, cochera para dos autos y terraza con parrilla.',lat:-12.1400,lng:-77.0200}
 ];
-const plural={Departamento:'departamentos',Casa:'casas',Terreno:'terrenos','Local comercial':'locales comerciales'};
-const montos={alquiler:[['Precio',0],['Hasta S/ 2,000',2000],['Hasta S/ 3,000',3000],['Hasta S/ 4,000',4000]],
-              venta:[['Precio',0],['Hasta US$ 150,000',150000],['Hasta US$ 250,000',250000],['Hasta US$ 400,000',400000]]};
+const plural={Departamento:'departamentos',Casa:'casas',Terreno:'terrenos','Local comercial':'locales comerciales',Oficina:'oficinas',Cochera:'cocheras','Local industrial':'locales industriales'};
+const TC=3.75; // tipo de cambio: soles por 1 dólar (para comparar propiedades de otra moneda con el rango)
 const I={
  heart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/></svg>',
  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
@@ -276,7 +306,7 @@ const I={
 const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('en-US');
 const wa=t=>'https://wa.me/'+WA+'?text='+encodeURIComponent(t);
-const estado={op:'alquiler',tipo:'Departamento',precio:0,am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
+const estado={op:'alquiler',tipo:'Departamento',mon:'USD',desde:0,hasta:0,am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
 let fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
 
 /* mapa real: Leaflet + mapa oscuro de CARTO (datos de OpenStreetMap), centrado en Lima */
@@ -349,9 +379,11 @@ const cardHTML=(p,top)=>`
       </div>
     </article>`;
 
+// precio de la propiedad expresado en la moneda elegida (USD o PEN)
+const valorEn=(p,m)=>{const usd=p.mon==='US$';return m==='USD'?(usd?p.precio:p.precio/TC):(usd?p.precio*TC:p.precio)};
 function render(){
-  const {op,tipo,precio:max,am}=estado, q=$('#ubi').value.trim().toLowerCase();
-  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!max||p.precio<=max)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
+  const {op,tipo,desde,hasta,mon,am}=estado, q=$('#ubi').value.trim().toLowerCase();
+  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!desde||valorEn(p,mon)>=desde)&&(!hasta||valorEn(p,mon)<=hasta)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
   r.sort((a,b)=>(a.precio-b.precio)*estado.orden);
   visibles=r;
   if(!r.some(x=>x.id===selId))selId=r.length?r[0].id:null;
@@ -366,11 +398,10 @@ function render(){
 /* filtros desplegables: se abren debajo, el ∨ pasa a ∧ y las opciones salen en un squircle */
 const AM=['Gimnasio','Piscina','Parrilla','Áreas verdes'];
 const DD={
-  op:{opts:()=>[['Alquilar','alquiler'],['Comprar','venta']]},
-  tipo:{opts:()=>[['Departamento','Departamento'],['Casa','Casa'],['Terreno','Terreno'],['Local comercial','Local comercial']]},
-  precio:{opts:()=>montos[estado.op].map(([t,v],i)=>[i?t:'Cualquier precio',v])},
+  op:{opts:()=>[['Alquilar','alquiler'],['Comprar','venta'],['Proyectos','proyecto']]},
+  tipo:{opts:()=>[['Departamento','Departamento'],['Casa','Casa'],['Terreno','Terreno'],['Oficina','Oficina'],['Local comercial','Local comercial'],['Local industrial','Local industrial'],['Cochera | Garaje','Cochera']]},
   mas:{multi:true,opts:()=>AM.map(a=>[a,a])},
-  orden:{fijo:true,opts:()=>[['Menor precio',1],['Mayor precio',-1]]} // el texto "Ordenar" no cambia
+  orden:{fijo:true,opts:()=>[['Mayor precio',-1],['Menor precio',1]]} // el texto "Ordenar" no cambia
 };
 function dibujar(k){
   const d=DD[k],box=$('#dd-'+k),opts=d.opts();
@@ -379,7 +410,7 @@ function dibujar(k){
   if(d.fijo)return;
   const l=box.querySelector('.lbl');
   l.textContent=k==='mas'?'Más filtros'+(estado.am.length?` (${estado.am.length})`:''):
-    k==='precio'?(estado.precio?opts.find(o=>o[1]===estado.precio)[0]:'Precio'):opts.find(o=>o[1]===estado[k])[0];
+    opts.find(o=>o[1]===estado[k])[0];
 }
 const btn=f=>f.querySelector(':scope > button');
 function cerrar(){document.querySelectorAll('.dd.open').forEach(f=>{f.classList.remove('open');btn(f).setAttribute('aria-expanded','false')})}
@@ -396,7 +427,7 @@ Object.keys(DD).forEach(k=>{
     const b=e.target.closest('.opt');if(!b)return;
     const v=DD[k].opts()[+b.dataset.i][1];
     if(DD[k].multi){const x=estado.am.indexOf(v);x<0?estado.am.push(v):estado.am.splice(x,1)}
-    else{estado[k]=v;if(k==='op'){estado.precio=0;dibujar('precio')}}
+    else{estado[k]=v}
     dibujar(k);
     if(!DD[k].multi){cerrar();btn(f).focus()}
     render();
@@ -410,6 +441,47 @@ Object.keys(DD).forEach(k=>{
     o[e.key==='ArrowDown'?Math.min(i+1,o.length-1):Math.max(i-1,0)].focus();
   });
 });
+/* Precio: "Cualquier precio" queda elegido siempre, salvo que se escriba un monto y se pulse "Ver resultados" */
+(function(){
+  const f=$('#dd-precio'),desde=$('#p-desde'),hasta=$('#p-hasta'),any=$('#p-any'),ver=$('#p-ver'),lbl=f.querySelector('.lbl');
+  let monB=estado.mon; // moneda marcada en el panel (se aplica al pulsar "Ver resultados")
+  const sim=()=>monB==='USD'?'USD':'S/';
+  function actualizar(){
+    // el botón muestra lo que se escribe: S/ 1+  /  S/ 1 - S/ 5  /  Hasta S/ 5
+    const d=+desde.value||0,h=+hasta.value||0,s=sim();
+    lbl.textContent=d&&h?`${s} ${fmt(d)} - ${s} ${fmt(h)}`:d?`${s} ${fmt(d)}+`:h?`Hasta ${s} ${fmt(h)}`:'Precio';
+    any.setAttribute('aria-selected',!estado.desde&&!estado.hasta);
+    f.querySelectorAll('.mo').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===monB));
+  }
+  // al abrir, el panel vuelve a mostrar lo que está aplicado (lo escrito sin pulsar "Ver resultados" se descarta)
+  function sincronizar(){
+    monB=estado.mon;desde.value=estado.desde||'';hasta.value=estado.hasta||'';actualizar();
+  }
+  btn(f).addEventListener('click',()=>{if(!f.classList.contains('open'))sincronizar();alternar('precio')});
+  any.addEventListener('click',()=>{
+    estado.desde=estado.hasta=0;estado.mon='USD';sincronizar();cerrar();btn(f).focus();render();
+  });
+  f.querySelectorAll('.mo').forEach(b=>b.addEventListener('click',()=>{monB=b.dataset.m;actualizar()}));
+  [desde,hasta].forEach(el=>{
+    // solo números: se bloquea cualquier otro carácter al escribir y se limpia al pegar
+    el.addEventListener('beforeinput',e=>{if(e.data&&/\D/.test(e.data))e.preventDefault()});
+    el.addEventListener('input',()=>{el.value=el.value.replace(/\D/g,'');actualizar()});
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ver.click()}});
+  });
+  ver.addEventListener('click',()=>{
+    const d=+desde.value||0,h=+hasta.value||0;
+    if(d||h){estado.desde=d;estado.hasta=h;estado.mon=monB}  // solo se aplica si se puso algún monto
+    else{estado.desde=estado.hasta=0}                         // sin montos: sigue "Cualquier precio"
+    sincronizar();cerrar();btn(f).focus();render();
+  });
+  f.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){cerrar();btn(f).focus()}
+    else if(e.key==='ArrowDown'&&e.target===btn(f)){e.preventDefault();if(!f.classList.contains('open')){sincronizar();alternar('precio')}desde.focus()}
+  });
+  // si se cierra sin pulsar "Ver resultados", el botón vuelve a mostrar lo que está aplicado
+  new MutationObserver(()=>{if(!f.classList.contains('open'))sincronizar()}).observe(f,{attributes:true,attributeFilter:['class']});
+  sincronizar();
+})();
 document.addEventListener('click',e=>{if(!e.target.closest('.dd'))cerrar()});
 
 iniciarMapa();render();
