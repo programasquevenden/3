@@ -15,7 +15,13 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
 3. DISEÑO (basado en la captura de referencia):
    - Barra de filtros: Ubicaciones, Alquilar/Comprar, Departamento (antes "Inmueble"), Precio y Más filtros.
      Los 5 tienen el mismo tamaño y forma squircle, con su ícono pegado a la derecha.
+   - Filtros desplegables (Alquilar/Comprar, Departamento, Precio, Más filtros): al hacer clic se abre debajo
+     un squircle solo con las opciones (sin título), el ∨ pasa a ∧ y al elegir se cierra. Más filtros permite
+     marcar varias comodidades y queda abierto. Al seleccionar un filtro solo cambia el color del borde
+     (no hay segundo contorno). Se maneja también con teclado (flechas y Esc).
    - Debajo: cantidad de resultados, botón "Ordenar" y la lista de propiedades.
+   - "Ordenar" es un desplegable del mismo estilo que los filtros, con 2 opciones: Menor precio y Mayor precio.
+     El texto del botón siempre dice "Ordenar" (no cambia). Por defecto está elegido Mayor precio.
    - Mapa a la derecha: alto, pegado (sticky) y ocupa todo el alto de la pantalla.
    - Línea de la cabecera y botón de llamada: color 3 (blanco). El botón de WhatsApp sigue en verde.
    - Tarjeta de arriba (#sel): muestra la propiedad del mapa. Cambia con solo pasar el mouse por un precio
@@ -75,22 +81,37 @@ button{font:inherit;color:inherit}
 .logo{display:flex;align-items:center;gap:12px;font:800 24px var(--display);letter-spacing:-.03em}
 
 /* filtros: los 5 del mismo tamaño, ícono a la derecha */
-.filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:28px 0}
+.filters{position:relative;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:28px 0}
 .f{position:relative}
+.dd{position:relative}
+.dd.open{z-index:60}
 .sq{display:block;width:100%;height:60px;margin:0;padding:0 52px 0 20px;text-align:left;cursor:pointer;
   background:var(--negro);color:var(--blanco);border:1px solid var(--linea);border-radius:20px;corner-shape:squircle;
   font:600 16px var(--body);appearance:none;-webkit-appearance:none;transition:border-color .2s}
-.sq:hover,.sq[aria-expanded="true"]{border-color:var(--verde)}
+/* al seleccionar solo cambia el color del borde, sin segundo contorno */
+.sq,.sq:focus,.sq:focus-visible{outline:none}
+.sq:hover,.sq:focus-visible,input.sq:focus,.dd.open .sq,.dd.open .ob{border-color:var(--verde)}
 .sq::placeholder{color:var(--blanco);opacity:1}
-.f svg{position:absolute;right:18px;top:50%;translate:0 -50%;width:20px;height:20px;pointer-events:none}
-select.sq option{background:var(--negro);color:var(--blanco)}
-.more{display:none;gap:10px;flex-wrap:wrap;margin:-8px 0 24px}
-.more.on{display:flex}
-.chip{position:relative}
-.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
-.chip span{display:inline-block;padding:8px 18px;border:1px solid var(--linea);border-radius:999px;font-weight:500}
-.chip input:checked+span{background:var(--verde);border-color:var(--verde);color:var(--negro);font-weight:700}
-.chip input:focus-visible+span{outline:2px solid var(--verde);outline-offset:3px}
+.sq .lbl{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.f>svg{position:absolute;right:18px;top:50%;translate:0 -50%;width:20px;height:20px;pointer-events:none}
+.chev{transition:rotate .2s}
+.f.open .chev{rotate:180deg}
+/* lista de opciones: squircle debajo del filtro */
+.panel{position:absolute;top:calc(100% + 8px);left:0;z-index:60;min-width:100%;width:max-content;max-width:min(340px,calc(100vw - 48px));padding:8px;
+  display:grid;gap:2px;background:var(--negro);border:1px solid var(--linea);border-radius:22px;corner-shape:squircle;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.9);opacity:0;visibility:hidden;translate:0 -6px;transition:opacity .15s,translate .15s,visibility .15s}
+.dd.open .panel{opacity:1;visibility:visible;translate:0 0}
+.dd-orden .panel{left:auto;right:0;min-width:100%}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border:0;border-radius:14px;corner-shape:squircle;background:none;
+  color:var(--blanco);font:500 16px var(--body);text-align:left;white-space:nowrap;cursor:pointer}
+.opt:hover,.opt:focus-visible{background:rgba(232,253,237,.08);outline:none}
+.radio,.check{flex:none;display:grid;place-items:center;width:24px;height:24px;border:2px solid var(--blanco)}
+.radio{border-radius:50%}
+.check{border-radius:7px}
+.opt[aria-selected="true"] .radio{border-color:var(--verde)}
+.opt[aria-selected="true"] .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
+.opt[aria-selected="true"] .check{border-color:var(--verde);background:var(--verde)}
+.opt[aria-selected="true"] .check::after{content:"";width:6px;height:11px;margin-top:-2px;border:solid var(--negro);border-width:0 2.5px 2.5px 0;rotate:45deg}
 
 /* cuerpo */
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start;padding-bottom:64px}
@@ -99,7 +120,7 @@ select.sq option{background:var(--negro);color:var(--blanco)}
 .bar .btns{display:flex;gap:12px}
 .ob{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 18px;cursor:pointer;background:var(--negro);
   border:1px solid var(--linea);border-radius:16px;corner-shape:squircle;font-weight:600;transition:border-color .2s}
-.ob:hover{border-color:var(--verde)}
+.ob:hover,.ob:focus-visible{border-color:var(--verde);outline:none}
 .ob svg{width:20px;height:20px}
 .list{display:grid;gap:20px}
 .card{position:relative;display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);min-height:340px;overflow:hidden;
@@ -163,6 +184,7 @@ select.sq option{background:var(--negro);color:var(--blanco)}
   .map{order:-1;position:relative;top:0;height:340px;min-height:0}
   .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
   .filters .f:first-child{grid-column:1/-1}
+  .filters .f:nth-child(n+3):nth-child(odd) .panel{left:auto;right:0}
 }
 @media(max-width:640px){
   .card{grid-template-columns:1fr}
@@ -186,29 +208,26 @@ select.sq option{background:var(--negro);color:var(--blanco)}
       <input class="sq" id="ubi" type="text" placeholder="Ubicaciones" autocomplete="off" aria-label="Ubicaciones">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     </div>
-    <div class="f">
-      <select class="sq" id="op" aria-label="Alquilar o comprar"><option value="alquiler">Alquilar</option><option value="venta">Comprar</option></select>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="f dd" id="dd-op">
+      <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Alquilar o comprar"><span class="lbl"></span></button>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <div class="panel" role="listbox" aria-label="Alquilar o comprar"></div>
     </div>
-    <div class="f">
-      <select class="sq" id="tipo" aria-label="Tipo de propiedad"><option>Departamento</option><option>Casa</option><option>Terreno</option><option>Local comercial</option></select>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="f dd" id="dd-tipo">
+      <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Tipo de propiedad"><span class="lbl"></span></button>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <div class="panel" role="listbox" aria-label="Tipo de propiedad"></div>
     </div>
-    <div class="f">
-      <select class="sq" id="precio" aria-label="Precio"></select>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="f dd" id="dd-precio">
+      <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Precio"><span class="lbl"></span></button>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <div class="panel" role="listbox" aria-label="Precio"></div>
     </div>
-    <div class="f">
-      <button class="sq" id="mas" type="button" aria-expanded="false" aria-controls="more">Más filtros</button>
+    <div class="f dd" id="dd-mas">
+      <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Más filtros"><span class="lbl"></span></button>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+      <div class="panel" role="listbox" aria-label="Más filtros" aria-multiselectable="true"></div>
     </div>
-  </div>
-
-  <div class="more" id="more">
-    <label class="chip"><input type="checkbox" value="Gimnasio"><span>Gimnasio</span></label>
-    <label class="chip"><input type="checkbox" value="Piscina"><span>Piscina</span></label>
-    <label class="chip"><input type="checkbox" value="Parrilla"><span>Parrilla</span></label>
-    <label class="chip"><input type="checkbox" value="Áreas verdes"><span>Áreas verdes</span></label>
   </div>
 
   <div class="layout">
@@ -217,7 +236,10 @@ select.sq option{background:var(--negro);color:var(--blanco)}
       <div class="bar">
         <h1 id="titulo" aria-live="polite"></h1>
         <div class="btns">
-          <button class="ob" id="orden" type="button"><span id="ordenT">Ordenar</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg></button>
+          <div class="dd dd-orden" id="dd-orden">
+            <button class="ob" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="lbl">Ordenar</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg></button>
+            <div class="panel" role="listbox" aria-label="Ordenar"></div>
+          </div>
         </div>
       </div>
       <div class="list" id="list"></div>
@@ -254,7 +276,8 @@ const I={
 const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('en-US');
 const wa=t=>'https://wa.me/'+WA+'?text='+encodeURIComponent(t);
-let orden=0, fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
+const estado={op:'alquiler',tipo:'Departamento',precio:0,am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
+let fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
 
 /* mapa real: Leaflet + mapa oscuro de CARTO (datos de OpenStreetMap), centrado en Lima */
 function iniciarMapa(){
@@ -301,10 +324,6 @@ function mostrarSel(animar){
   box.style.minHeight=p?Math.max(parseFloat(box.style.minHeight)||0,box.offsetHeight)+'px':'';
 }
 
-function opcionesPrecio(){
-  $('#precio').innerHTML=montos[$('#op').value].map(([t,v])=>`<option value="${v}">${t}</option>`).join('');
-}
-
 const cardHTML=(p,top)=>`
     <article class="card${top?' top':''}" data-pid="${p.id}"${top?'':` data-id="${p.id}"`}>
       <div class="pic">
@@ -331,10 +350,9 @@ const cardHTML=(p,top)=>`
     </article>`;
 
 function render(){
-  const op=$('#op').value, tipo=$('#tipo').value, max=+$('#precio').value, q=$('#ubi').value.trim().toLowerCase();
-  const am=[...document.querySelectorAll('.chip input:checked')].map(i=>i.value);
+  const {op,tipo,precio:max,am}=estado, q=$('#ubi').value.trim().toLowerCase();
   const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!max||p.precio<=max)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
-  if(orden)r.sort((a,b)=>(a.precio-b.precio)*orden);
+  r.sort((a,b)=>(a.precio-b.precio)*estado.orden);
   visibles=r;
   if(!r.some(x=>x.id===selId))selId=r.length?r[0].id:null;
   const nom=r.length===1?tipo.toLowerCase():plural[tipo];
@@ -345,13 +363,57 @@ function render(){
   mostrarSel(false);
 }
 
-iniciarMapa();opcionesPrecio();render();
-$('#op').addEventListener('change',()=>{opcionesPrecio();render()});
-['#tipo','#precio'].forEach(s=>$(s).addEventListener('change',render));
+/* filtros desplegables: se abren debajo, el ∨ pasa a ∧ y las opciones salen en un squircle */
+const AM=['Gimnasio','Piscina','Parrilla','Áreas verdes'];
+const DD={
+  op:{opts:()=>[['Alquilar','alquiler'],['Comprar','venta']]},
+  tipo:{opts:()=>[['Departamento','Departamento'],['Casa','Casa'],['Terreno','Terreno'],['Local comercial','Local comercial']]},
+  precio:{opts:()=>montos[estado.op].map(([t,v],i)=>[i?t:'Cualquier precio',v])},
+  mas:{multi:true,opts:()=>AM.map(a=>[a,a])},
+  orden:{fijo:true,opts:()=>[['Menor precio',1],['Mayor precio',-1]]} // el texto "Ordenar" no cambia
+};
+function dibujar(k){
+  const d=DD[k],box=$('#dd-'+k),opts=d.opts();
+  const on=v=>d.multi?estado.am.includes(v):estado[k]===v;
+  box.querySelector('.panel').innerHTML=opts.map(([t,v],i)=>`<button class="opt" type="button" role="option" aria-selected="${on(v)}" data-i="${i}"><span class="${d.multi?'check':'radio'}"></span>${t}</button>`).join('');
+  if(d.fijo)return;
+  const l=box.querySelector('.lbl');
+  l.textContent=k==='mas'?'Más filtros'+(estado.am.length?` (${estado.am.length})`:''):
+    k==='precio'?(estado.precio?opts.find(o=>o[1]===estado.precio)[0]:'Precio'):opts.find(o=>o[1]===estado[k])[0];
+}
+const btn=f=>f.querySelector(':scope > button');
+function cerrar(){document.querySelectorAll('.dd.open').forEach(f=>{f.classList.remove('open');btn(f).setAttribute('aria-expanded','false')})}
+function alternar(k){
+  const f=$('#dd-'+k),abrir=!f.classList.contains('open');
+  cerrar();
+  if(abrir){f.classList.add('open');btn(f).setAttribute('aria-expanded','true')}
+}
+Object.keys(DD).forEach(k=>{
+  dibujar(k);
+  const f=$('#dd-'+k);
+  btn(f).addEventListener('click',()=>alternar(k));
+  f.querySelector('.panel').addEventListener('click',e=>{
+    const b=e.target.closest('.opt');if(!b)return;
+    const v=DD[k].opts()[+b.dataset.i][1];
+    if(DD[k].multi){const x=estado.am.indexOf(v);x<0?estado.am.push(v):estado.am.splice(x,1)}
+    else{estado[k]=v;if(k==='op'){estado.precio=0;dibujar('precio')}}
+    dibujar(k);
+    if(!DD[k].multi){cerrar();btn(f).focus()}
+    render();
+  });
+  f.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){cerrar();btn(f).focus();return}
+    if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;
+    e.preventDefault();
+    if(!f.classList.contains('open'))alternar(k);
+    const o=[...f.querySelectorAll('.opt')],i=o.indexOf(document.activeElement);
+    o[e.key==='ArrowDown'?Math.min(i+1,o.length-1):Math.max(i-1,0)].focus();
+  });
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.dd'))cerrar()});
+
+iniciarMapa();render();
 $('#ubi').addEventListener('input',render);
-document.querySelectorAll('.chip input').forEach(i=>i.addEventListener('change',render));
-$('#mas').addEventListener('click',e=>{const on=$('#more').classList.toggle('on');e.currentTarget.setAttribute('aria-expanded',on)});
-$('#orden').addEventListener('click',()=>{orden=orden===0?1:orden===1?-1:0;$('#ordenT').textContent=['Ordenar','Menor precio','Mayor precio'][orden===-1?2:orden];render()});
 // favoritos: funciona en la tarjeta de arriba y en las de abajo
 document.addEventListener('click',e=>{const h=e.target.closest('.heart');if(!h)return;
   const id=+h.closest('.card').dataset.pid;fav.has(id)?fav.delete(id):fav.add(id);
