@@ -13,7 +13,7 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
    Estilo: modo oscuro.
 
 3. DISEÑO (basado en la captura de referencia):
-   - Barra de filtros: Ubicaciones, Alquilar/Comprar, Departamento (antes "Inmueble"), Precio y Más filtros.
+   - Barra de filtros: Ubicación, Alquilar/Comprar, Departamento (antes "Inmueble"), Precio y Más filtros.
      Los 5 tienen el mismo tamaño y forma squircle, con su ícono pegado a la derecha.
    - Filtros desplegables (Alquilar/Comprar, Departamento, Precio, Más filtros): al hacer clic se abre debajo
      un squircle solo con las opciones (sin título), el ∨ pasa a ∧ y al elegir se cierra. Más filtros permite
@@ -38,7 +38,12 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
      y la etiqueta "Destacado".
 
 4. MAPA REAL: usa Leaflet (cdnjs) con mapa oscuro de CARTO sobre datos de OpenStreetMap.
-   Centro: Lima (CENTRO = [-12.0464, -77.0428]), zoom 12. Necesita internet para cargar el mapa.
+   Vista inicial: Latinoamérica (LATAM). Los precios del mapa se agrupan en círculos con el número de propiedades (clic = acercar).
+   Ubicaciones: se escribe cualquier lugar y se pulsa Enter; busca con OpenStreetMap (Nominatim, sin clave). Al elegir un resultado,
+   el mapa va allí y la lista muestra solo lo que hay en esa zona (borrar el texto quita la zona).
+   "Ver mapa" (abajo del mapa) abre el mapa a todo el ancho con los precios donde está cada propiedad; "Ver listado" vuelve.
+   Más filtros: opciones redondas como las demás; "Sin filtros" va arriba y está marcado por defecto.
+   Necesita internet para cargar el mapa.
    Cada propiedad lleva sus coordenadas `lat` y `lng`; de ahí salen los pines con precio.
    Los mapas de CARTO/OSM son gratis para uso liviano; si la web tiene mucho tráfico conviene
    revisar sus condiciones de uso o cambiar de proveedor.
@@ -76,15 +81,15 @@ body{margin:0;background:var(--negro);color:var(--blanco);font:400 16px/1.5 var(
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--verde);outline-offset:3px}
-.wrap{width:min(1320px,100% - 48px);margin-inline:auto}
+.wrap{width:calc((100% + min(1320px,100% - 48px)) / 2);margin-inline:auto} /* margen lateral = la mitad del anterior */
 
 /* cabecera */
 .top{border-bottom:1px solid var(--blanco)}
 .top .wrap{height:72px;display:flex;align-items:center}
 .logo{display:flex;align-items:center;gap:12px;font:800 24px var(--display);letter-spacing:-.03em}
 
-/* filtros: los 5 del mismo tamaño, ícono a la derecha */
-.filters{position:relative;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:28px 0}
+/* filtros: Ubicación ocupa el espacio que sobra; los otros 4 miden lo mismo (0.8 del ancho que tenían), ícono a la derecha */
+.filters{position:relative;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) repeat(4,calc(min(1272px,100% - 72px) * .16));gap:12px;margin:28px 0}
 .f{position:relative}
 .dd{position:relative}
 .dd.open{z-index:60}
@@ -110,16 +115,17 @@ button{font:inherit;color:inherit}
 .opt:hover,.opt:focus-visible{background:rgba(232,253,237,.08);outline:none}
 .radio,.check{flex:none;display:grid;place-items:center;width:24px;height:24px;border:2px solid var(--blanco)}
 .radio{border-radius:50%}
-.check{border-radius:7px}
+.check{border-radius:50%}
 .opt[aria-selected="true"] .radio{border-color:var(--verde)}
 .opt[aria-selected="true"] .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
-.opt[aria-selected="true"] .check{border-color:var(--verde);background:var(--verde)}
-.opt[aria-selected="true"] .check::after{content:"";width:6px;height:11px;margin-top:-2px;border:solid var(--negro);border-width:0 2.5px 2.5px 0;rotate:45deg}
+.opt[aria-selected="true"] .check{border-color:var(--verde)}
+.opt[aria-selected="true"] .check::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
 /* panel de Precio: moneda (USD / Soles) y casillas Desde / Hasta */
-#dd-precio .panel{min-width:280px}
+#dd-precio .panel{min-width:280px;max-width:none;width:calc(200% + 12px)} /* llega hasta el borde derecho de Más filtros (2 columnas + el espacio entre ellas) */
+#dd-precio .opt,#dd-precio .mo{gap:18px} /* más aire entre el círculo y el texto; "USD" queda alineado con "Cualquier precio" */
 #dd-tipo .panel{max-height:calc(100vh - 110px);overflow-y:auto;overscroll-behavior:contain} /* salen todos los tipos; solo en pantallas muy bajas aparece scroll */
 .mons{display:flex;gap:22px;padding:10px 14px 6px}
-.mo{display:flex;align-items:center;gap:10px;padding:0;border:0;background:none;color:var(--blanco);font:500 16px var(--body);cursor:pointer}
+.mo{display:flex;align-items:center;gap:14px;padding:0;border:0;background:none;color:var(--blanco);font:500 16px var(--body);cursor:pointer}
 .mo[aria-selected="true"] .radio{border-color:var(--verde)}
 .mo[aria-selected="true"] .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--verde)}
 .rango{display:flex;gap:10px;padding:6px 6px 8px}
@@ -133,7 +139,7 @@ button{font:inherit;color:inherit}
 .num:focus::placeholder{color:transparent}
 
 /* cuerpo */
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start;padding-bottom:64px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) calc(min(1272px,100% - 72px) * .32 + 12px);gap:12px;align-items:start;padding-bottom:64px}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}
 .bar h1{margin:0;font:600 20px/1.3 var(--body)}
 .bar .btns{display:flex;gap:12px}
@@ -152,9 +158,9 @@ button{font:inherit;color:inherit}
 .card.cambia{animation:entra .3s ease}
 @keyframes entra{from{opacity:.4}to{opacity:1}}
 .selnota{margin:0;color:var(--verde);font-weight:600;font-size:14px}
-.pic{position:relative;overflow:hidden}
+.pic{position:relative;overflow:hidden;border-right:1px solid var(--blanco)} /* línea vertical color 3 entre imagen y contenido */
 .pic img,.pic .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.ph{display:grid;place-items:center;background:repeating-linear-gradient(135deg,rgba(232,253,237,.04) 0 12px,transparent 12px 24px),linear-gradient(160deg,rgba(20,235,74,.3),var(--negro))}
+.ph{display:grid;place-items:center;background:var(--negro)}
 .ph span{padding:8px 14px;border:1px dashed var(--suave);border-radius:999px;font-size:13px;color:var(--suave)}
 .body{display:flex;flex-direction:column;gap:8px;min-width:0;padding:24px}
 .eyebrow{margin:0;color:var(--suave);font-size:14px}
@@ -182,6 +188,24 @@ button{font:inherit;color:inherit}
   border:1px solid var(--linea);border-radius:28px;corner-shape:squircle}
 .canvas{position:relative;flex:1;min-height:0;background:var(--negro)}
 #mapa{position:absolute;inset:0;background:var(--negro);font-family:var(--body)}
+#ubi+svg{pointer-events:auto;cursor:pointer}
+.sug{position:absolute;top:calc(100% + 8px);left:0;z-index:60;width:max(100%,340px);max-width:min(460px,calc(100vw - 48px));padding:8px;display:grid;gap:2px;background:var(--negro);
+  border:1px solid var(--linea);border-radius:22px;corner-shape:squircle;box-shadow:0 24px 60px -20px rgba(0,0,0,.9)}
+.sug[hidden]{display:none}
+.sug .opt{white-space:normal;text-align:left;line-height:1.3}
+.sug .msg{margin:0;padding:14px;color:var(--suave);font:500 15px var(--body)}
+/* mapa a todo el ancho (Ver mapa) */
+button.vm{width:100%;background:none;border:0;border-top:1px solid var(--linea);color:inherit;font:700 16px var(--body);cursor:pointer;text-align:left}
+.layout.mg{grid-template-columns:1fr}
+.layout.mg>section{display:none}
+.layout.mg .map{position:relative;top:0;height:calc(100vh - 40px);min-height:520px;scroll-margin-top:20px}
+.mcard{position:absolute;left:16px;bottom:16px;z-index:900;width:min(380px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto}
+.mcard[hidden]{display:none}
+.mcard .card{grid-template-columns:1fr}
+.mcard .pic{min-height:200px}
+/* círculo que agrupa varias propiedades cercanas */
+.grupo{position:absolute;left:0;top:0;translate:-50% -50%;min-width:36px;height:36px;padding:0 9px;box-sizing:border-box;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  background:var(--verde);color:var(--negro);font:700 14px var(--body);cursor:pointer;box-shadow:0 0 0 6px var(--verde-t)}
 .pinwrap{background:none;border:0}
 .pin{position:absolute;left:0;top:0;translate:-50% calc(-100% - 7px);padding:5px 11px;border-radius:999px;background:var(--blanco);color:var(--negro);font:700 13px var(--body);white-space:nowrap;cursor:pointer;transition:background .2s,scale .2s}
 .pin::after{content:"";position:absolute;left:50%;bottom:-5px;translate:-50% 0;border:6px solid transparent;border-bottom:0;border-top-color:var(--blanco)}
@@ -204,7 +228,7 @@ button{font:inherit;color:inherit}
   .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
   .filters .f:first-child{grid-column:1/-1}
   .filters .f:nth-child(n+3):nth-child(odd) .panel{left:auto;right:0}
-  #dd-precio .panel{left:auto;right:0}
+  #dd-precio .panel{left:0;right:auto}
 }
 @media(max-width:640px){
   .card{grid-template-columns:1fr}
@@ -225,8 +249,9 @@ button{font:inherit;color:inherit}
 <main class="wrap">
   <div class="filters" role="search">
     <div class="f">
-      <input class="sq" id="ubi" type="text" placeholder="Ubicaciones" autocomplete="off" aria-label="Ubicaciones">
+      <input class="sq" id="ubi" type="text" placeholder="Ubicación" autocomplete="off" aria-label="Ubicación">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <div class="sug" id="sug" hidden></div>
     </div>
     <div class="f dd" id="dd-op">
       <button class="sq" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Alquilar o comprar"><span class="lbl"></span></button>
@@ -277,9 +302,9 @@ button{font:inherit;color:inherit}
     </section>
 
     <aside class="map" aria-label="Mapa de propiedades">
-      <div class="canvas"><div id="mapa" role="application" aria-label="Mapa de Lima con las propiedades"></div></div>
-      <a class="vm" href="https://www.google.com/maps/search/departamentos+en+alquiler+Lima" target="_blank" rel="noopener">Ver mapa
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+      <div class="canvas"><div id="mapa" role="application" aria-label="Mapa con las propiedades"></div><div class="mcard" id="mcard" hidden></div></div>
+      <button class="vm" id="vm" type="button" aria-pressed="false"><span id="vmt">Ver mapa</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button>
     </aside>
   </div>
 </main>
@@ -287,7 +312,7 @@ button{font:inherit;color:inherit}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const WA='51903307861';
-const CENTRO=[-12.0464,-77.0428]; // centro de Lima
+const LATAM=[[-56,-118],[32,-34]]; // vista inicial: Latinoamérica
 const props=[
  {id:1,img:'depto1.webp',op:'alquiler',tipo:'Departamento',precio:2350,mon:'S/',un:12,dorm:'1 a 2 dorm.',m2:'45 a 61 m² tot.',dir:'Av. Brasil 1840',zona:'Jesús María, Lima',am:['Gimnasio','Piscina','Parrilla','Áreas verdes'],desc:'Departamentos de 1 y 2 dormitorios diseñados para brindar comodidad, ubicación y seguridad cerca del centro de Lima.',lat:-12.0700,lng:-77.0530},
  {id:2,img:'depto2.webp',op:'alquiler',tipo:'Departamento',precio:2800,mon:'S/',un:8,dorm:'2 dorm.',m2:'58 a 64 m² tot.',dir:'Av. Larco 1150',zona:'Miraflores, Lima',am:['Gimnasio','Parrilla'],desc:'Ven a conocer nuestros departamentos de estreno de 2 dormitorios con balcón y excelente iluminación natural.',lat:-12.1190,lng:-77.0300},
@@ -306,24 +331,40 @@ const I={
 const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('en-US');
 const wa=t=>'https://wa.me/'+WA+'?text='+encodeURIComponent(t);
-const estado={op:'alquiler',tipo:'Departamento',mon:'USD',desde:0,hasta:0,am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
+const estado={op:'alquiler',tipo:'Departamento',mon:'USD',desde:0,hasta:0,zona:null,zonaNombre:'',am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
+const compacto=n=>n>=1e6?(Math.floor(n/1e5)/10)+'M':n>=1e5?Math.floor(n/1e3)+'K':fmt(n); // 5589600 → 5.5M, 135000 → 135K
 let fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
 
 /* mapa real: Leaflet + mapa oscuro de CARTO (datos de OpenStreetMap), centrado en Lima */
 function iniciarMapa(){
   if(!window.L)return;
-  mapa=L.map('mapa',{center:CENTRO,zoom:12,dragging:!L.Browser.mobile});
+  mapa=L.map('mapa',{zoomSnap:.25,minZoom:2,dragging:!L.Browser.mobile});
+  mapa.fitBounds(LATAM,{animate:false});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'}).addTo(mapa);
   capa=L.layerGroup().addTo(mapa);
+  mapa.on('zoomend',()=>pintar(visibles));
   setTimeout(()=>mapa.invalidateSize(),0);
   addEventListener('resize',()=>{mapa.invalidateSize();$('#sel').style.minHeight=''});
 }
 function pintar(r){
   if(!mapa)return;
   capa.clearLayers();marcas={};
+  // se agrupan las propiedades que quedan a menos de 64 px entre sí (desde el zoom 17 ya no se agrupa)
+  const z=mapa.getZoom(),grupos={};
   r.forEach(p=>{
-    const m=L.marker([p.lat,p.lng],{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="pin">${p.mon} ${fmt(p.precio)}</span>`})}).addTo(capa);
+    const pt=mapa.project([p.lat,p.lng],z),k=z>=17?p.id:Math.floor(pt.x/64)+':'+Math.floor(pt.y/64);
+    (grupos[k]=grupos[k]||[]).push(p);
+  });
+  Object.values(grupos).forEach(g=>{
+    if(g.length>1){
+      const b=L.latLngBounds(g.map(p=>[p.lat,p.lng]));
+      L.marker(b.getCenter(),{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="grupo">${g.length}</span>`})})
+        .addTo(capa).on('click',()=>mapa.fitBounds(b,{padding:[70,70],maxZoom:17}));
+      return;
+    }
+    const p=g[0];
+    const m=L.marker([p.lat,p.lng],{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="pin">${p.mon} ${compacto(p.precio)}</span>`})}).addTo(capa);
     const pin=m.getElement().querySelector('.pin');
     if(p.id===selId)pin.classList.add('sel');
     // al pasar el mouse (o tocar) un precio, la tarjeta de arriba cambia a esa propiedad; la página no se mueve
@@ -348,6 +389,8 @@ function elegir(id){
 function mostrarSel(animar){
   const box=$('#sel'),p=visibles.find(x=>x.id===selId);
   box.hidden=!p;
+  const mc=$('#mcard'),grande=$('.layout').classList.contains('mg');
+  mc.hidden=!(grande&&p);mc.innerHTML=grande&&p?cardHTML(p,true):'';
   box.innerHTML=p?cardHTML(p,true):'';
   if(p&&animar)box.firstElementChild.classList.add('cambia');
   // el contenedor conserva el alto mayor visto, así la lista de abajo no se mueve al cambiar de propiedad
@@ -362,8 +405,7 @@ const cardHTML=(p,top)=>`
       </div>
       <div class="body">
         <button class="heart" type="button" aria-label="Guardar en favoritos" aria-pressed="${fav.has(p.id)}">${I.heart}</button>
-        ${top?'<p class="selnota">Seleccionado en el mapa</p>':''}
-        <p class="eyebrow">${plural[p.tipo]} desde</p>
+        ${top?`<p class="selnota">Seleccionado en el mapa</p>`:`<p class="eyebrow">${plural[p.tipo]} desde</p>`}
         <p class="price">${p.mon} ${fmt(p.precio)}</p>
         <div class="spec"><span>${p.un} un.</span><span>${p.dorm}</span><span>${p.m2}</span></div>
         <p class="addr">${p.dir}</p>
@@ -382,13 +424,13 @@ const cardHTML=(p,top)=>`
 // precio de la propiedad expresado en la moneda elegida (USD o PEN)
 const valorEn=(p,m)=>{const usd=p.mon==='US$';return m==='USD'?(usd?p.precio:p.precio/TC):(usd?p.precio*TC:p.precio)};
 function render(){
-  const {op,tipo,desde,hasta,mon,am}=estado, q=$('#ubi').value.trim().toLowerCase();
-  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!desde||valorEn(p,mon)>=desde)&&(!hasta||valorEn(p,mon)<=hasta)&&(!q||(p.dir+' '+p.zona).toLowerCase().includes(q))&&am.every(a=>p.am.includes(a)));
+  const {op,tipo,desde,hasta,mon,am}=estado, zona=estado.zona;
+  const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!desde||valorEn(p,mon)>=desde)&&(!hasta||valorEn(p,mon)<=hasta)&&(!zona||zona.contains([p.lat,p.lng]))&&am.every(a=>p.am.includes(a)));
   r.sort((a,b)=>(a.precio-b.precio)*estado.orden);
   visibles=r;
   if(!r.some(x=>x.id===selId))selId=r.length?r[0].id:null;
   const nom=r.length===1?tipo.toLowerCase():plural[tipo];
-  $('#titulo').textContent=`${r.length} ${nom} en ${op} en Lima`;
+  $('#titulo').textContent=`${r.length} ${nom} en ${op} en ${zona?(estado.zonaNombre||'esta zona'):'Lima'}`;
   $('#list').innerHTML=r.length?r.map(p=>cardHTML(p,false)).join(''):
     `<div class="vacio">No hay propiedades con estos filtros. Cambia la búsqueda o <a href="${wa('Hola, busco una propiedad en Lima y no la encuentro en la página')}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>.</div>`;
   pintar(r);
@@ -400,12 +442,12 @@ const AM=['Gimnasio','Piscina','Parrilla','Áreas verdes'];
 const DD={
   op:{opts:()=>[['Alquilar','alquiler'],['Comprar','venta'],['Proyectos','proyecto']]},
   tipo:{opts:()=>[['Departamento','Departamento'],['Casa','Casa'],['Terreno','Terreno'],['Oficina','Oficina'],['Local comercial','Local comercial'],['Local industrial','Local industrial'],['Cochera | Garaje','Cochera']]},
-  mas:{multi:true,opts:()=>AM.map(a=>[a,a])},
+  mas:{multi:true,opts:()=>[['Sin filtros','__ninguno'],...AM.map(a=>[a,a])]},
   orden:{fijo:true,opts:()=>[['Mayor precio',-1],['Menor precio',1]]} // el texto "Ordenar" no cambia
 };
 function dibujar(k){
   const d=DD[k],box=$('#dd-'+k),opts=d.opts();
-  const on=v=>d.multi?estado.am.includes(v):estado[k]===v;
+  const on=v=>d.multi?(v==='__ninguno'?!estado.am.length:estado.am.includes(v)):estado[k]===v;
   box.querySelector('.panel').innerHTML=opts.map(([t,v],i)=>`<button class="opt" type="button" role="option" aria-selected="${on(v)}" data-i="${i}"><span class="${d.multi?'check':'radio'}"></span>${t}</button>`).join('');
   if(d.fijo)return;
   const l=box.querySelector('.lbl');
@@ -426,7 +468,7 @@ Object.keys(DD).forEach(k=>{
   f.querySelector('.panel').addEventListener('click',e=>{
     const b=e.target.closest('.opt');if(!b)return;
     const v=DD[k].opts()[+b.dataset.i][1];
-    if(DD[k].multi){const x=estado.am.indexOf(v);x<0?estado.am.push(v):estado.am.splice(x,1)}
+    if(DD[k].multi){if(v==='__ninguno')estado.am=[];else{const x=estado.am.indexOf(v);x<0?estado.am.push(v):estado.am.splice(x,1)}}
     else{estado[k]=v}
     dibujar(k);
     if(!DD[k].multi){cerrar();btn(f).focus()}
@@ -485,7 +527,59 @@ Object.keys(DD).forEach(k=>{
 document.addEventListener('click',e=>{if(!e.target.closest('.dd'))cerrar()});
 
 iniciarMapa();render();
-$('#ubi').addEventListener('input',render);
+/* Ubicaciones: se escribe cualquier lugar y se pulsa Enter (o la lupa); busca con OpenStreetMap (Nominatim, sin clave) */
+(function(){
+  const inp=$('#ubi'),sug=$('#sug');
+  let lista=[];
+  const msg=t=>{const p=document.createElement('p');p.className='msg';p.textContent=t;sug.replaceChildren(p)};
+  const nombre=x=>x.display_name.split(',')[0].trim();
+  async function buscar(){
+    const q=inp.value.trim();
+    if(q.length<2)return;
+    sug.hidden=false;msg('Buscando…');
+    try{
+      const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=es&q='+encodeURIComponent(q));
+      if(!r.ok)throw new Error(r.status);
+      lista=await r.json();
+    }catch(e){msg('No se pudo buscar. Revisa tu conexión a internet.');return}
+    if(!lista.length){msg('No encontramos ese lugar.');return}
+    sug.replaceChildren(...lista.map((x,i)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.dataset.i=i;b.textContent=x.display_name;return b}));
+  }
+  function ir(x){
+    const [s,n,w,e]=x.boundingbox.map(Number);
+    const b=L.latLngBounds([[s,w],[n,e]]).extend([(s+n)/2-.01,(w+e)/2-.01]).extend([(s+n)/2+.01,(w+e)/2+.01]); // mínimo ~2 km de lado
+    inp.value=nombre(x);estado.zona=b;estado.zonaNombre=nombre(x);
+    sug.hidden=true;
+    if(mapa)mapa.fitBounds(b,{padding:[30,30],maxZoom:16});
+    render();
+  }
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscar()}else if(e.key==='Escape')sug.hidden=true});
+  inp.addEventListener('input',()=>{
+    if(inp.value.trim())return;
+    sug.hidden=true;
+    if(estado.zona){estado.zona=null;estado.zonaNombre='';if(mapa)mapa.fitBounds(LATAM);render()} // al borrar el texto se quita la zona
+  });
+  inp.nextElementSibling.addEventListener('click',buscar);
+  sug.addEventListener('click',e=>{const b=e.target.closest('.opt');if(b)ir(lista[+b.dataset.i])});
+  document.addEventListener('click',e=>{if(!e.target.closest('#ubi,#sug,#ubi+svg'))sug.hidden=true});
+})();
+/* Ver mapa / Ver listado: el mapa ocupa todo el ancho y se ven los precios donde está cada propiedad */
+(function(){
+  const lay=$('.layout'),vm=$('#vm'),t=$('#vmt');
+  // el logo (icono + Hogar Hogareña) lleva al inicio: sale del mapa grande y sube al principio
+  $('.logo').addEventListener('click',e=>{
+    e.preventDefault();
+    if(lay.classList.contains('mg'))vm.click();
+    scrollTo({top:0,behavior:'smooth'});
+  });
+  vm.addEventListener('click',()=>{
+    const g=lay.classList.toggle('mg');
+    t.textContent=g?'Ver listado':'Ver mapa';vm.setAttribute('aria-pressed',g);
+    if(mapa)setTimeout(()=>{mapa.invalidateSize();mapa.fitBounds(estado.zona||LATAM,{animate:false});pintar(visibles)},60);
+    mostrarSel(false);
+    if(g)$('aside.map').scrollIntoView({block:'start',behavior:'smooth'});
+  });
+})();
 // favoritos: funciona en la tarjeta de arriba y en las de abajo
 document.addEventListener('click',e=>{const h=e.target.closest('.heart');if(!h)return;
   const id=+h.closest('.card').dataset.pid;fav.has(id)?fav.delete(id):fav.add(id);
