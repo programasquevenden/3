@@ -19,14 +19,14 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
      un squircle solo con las opciones (sin título), el ∨ pasa a ∧ y al elegir se cierra. Más filtros permite
      marcar varias comodidades y queda abierto. Al seleccionar un filtro solo cambia el color del borde
      (no hay segundo contorno). Se maneja también con teclado (flechas y Esc).
-   - Precio: al abrirlo sale "Cualquier precio" y debajo la moneda (USD primero, Soles a la derecha; por defecto USD)
+   - Precio: al abrirlo sale "Cualquier precio" y debajo la moneda (USD primero, Soles a la derecha; por defecto Soles). USD = dólar de Estados Unidos, Soles = sol peruano (PEN). Al cambiar de moneda cambian también todos los precios de la página (tarjetas y mapa) y el rango se convierte con el tipo de cambio TC
      y dos casillas Desde / Hasta. Solo aceptan números. "Cualquier precio" sigue elegido hasta que se escribe un monto y se pulsa "Ver resultados" (el rango no filtra antes). Al hacer clic en una casilla desaparece su texto guía y su
      borde pasa a color 3 (blanco). Si la propiedad está en otra moneda se convierte con el tipo de cambio TC (en el JavaScript).
    - Debajo: cantidad de resultados, botón "Ordenar" y la lista de propiedades.
    - "Ordenar" es un desplegable del mismo estilo que los filtros, con 2 opciones: Menor precio y Mayor precio.
      El texto del botón siempre dice "Ordenar" (no cambia). Por defecto está elegido Mayor precio.
    - Mapa a la derecha: alto, pegado (sticky) y ocupa todo el alto de la pantalla.
-   - Línea de la cabecera y botón de llamada: color 3 (blanco). El botón de WhatsApp sigue en verde.
+   - Línea de la cabecera: el mismo gris de los bordes (blanco al 20%). Botón de llamada: color 3 (blanco). El botón de WhatsApp sigue en verde.
    - Tarjeta de arriba (#sel): muestra la propiedad del mapa. Cambia con solo pasar el mouse por un precio
      (o tocarlo), sin necesidad de seleccionarlo; la última queda elegida (pin verde) hasta pasar por otro.
      La página nunca se desplaza por esto: el contenedor conserva su alto para que lo de abajo no se mueva.
@@ -50,12 +50,14 @@ NOTAS DEL ARCHIVO (todas las notas van aquí arriba)
    El botón "Ver mapa" abre Google Maps en otra pestaña.
 
 5. PROPIEDADES: están en la lista `props` del JavaScript final. Los datos son de ejemplo; reemplázalos por los reales.
-   Cada una usa una imagen (depto1.webp ... depto6.webp). Sin imagen se ve un recuadro de aviso.
+   Cada una usa su imagen (depto1.webp, casa1.webp, terreno1.webp, etc.). Sin imagen se ve un recuadro de aviso.
    Los filtros funcionan con esos datos (tipo, alquiler/venta, precio máximo, ubicación y comodidades).
 
 6. SECCIONES ANTERIORES: la versión anterior tenía 3 secciones (captar propietarios, conseguir
    compradores, conseguir inquilinos) dentro de una página de venta. Esta versión las reemplaza
    por el listado de propiedades.
+
+7. TIPO DE CAMBIO (soles por dólar): línea 343, `const TC`. REDONDEO (a dólares hacia arriba, a soles hacia abajo): línea 344, `const redondear`; lo usan los precios y el rango de Precio.
 -->
 <html lang="es">
 <head>
@@ -84,16 +86,17 @@ button{font:inherit;color:inherit}
 .wrap{width:calc((100% + min(1320px,100% - 48px)) / 2);margin-inline:auto} /* margen lateral = la mitad del anterior */
 
 /* cabecera */
-.top{border-bottom:1px solid var(--blanco)}
+.top{border-bottom:1px solid var(--linea)} /* mismo gris de las demás líneas (bordes de filtros y tarjetas) */
 .top .wrap{height:72px;display:flex;align-items:center}
-.logo{display:flex;align-items:center;gap:12px;font:800 24px var(--display);letter-spacing:-.03em}
+.logo{display:flex;align-items:center;gap:9.6px;font:800 19.2px var(--display);letter-spacing:-.03em} /* x0.8 */
+.logo svg{width:36.8px;height:29.6px}
 
 /* filtros: Ubicación ocupa el espacio que sobra; los otros 4 miden lo mismo (0.8 del ancho que tenían), ícono a la derecha */
 .filters{position:relative;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) repeat(4,calc(min(1272px,100% - 72px) * .16));gap:12px;margin:28px 0}
 .f{position:relative}
 .dd{position:relative}
 .dd.open{z-index:60}
-.sq{display:block;width:100%;height:60px;margin:0;padding:0 52px 0 20px;text-align:left;cursor:pointer;
+.sq{display:block;width:100%;height:36px;margin:0;padding:0 52px 0 20px;text-align:left;cursor:pointer;
   background:var(--negro);color:var(--blanco);border:1px solid var(--linea);border-radius:20px;corner-shape:squircle;
   font:600 16px var(--body);appearance:none;-webkit-appearance:none;transition:border-color .2s}
 /* al seleccionar solo cambia el color del borde, sin segundo contorno */
@@ -144,7 +147,7 @@ button{font:inherit;color:inherit}
 .bar h1{margin:0;font:600 20px/1.3 var(--body)}
 .bar .btns{display:flex;gap:12px}
 .ob{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 18px;cursor:pointer;background:var(--negro);
-  border:1px solid var(--linea);border-radius:16px;corner-shape:squircle;font-weight:600;transition:border-color .2s}
+  border:1px solid var(--linea);border-radius:16px;corner-shape:squircle;font-weight:600;font-size:20px;transition:border-color .2s} /* mismo tamaño que el título */
 .ob:hover,.ob:focus-visible{border-color:var(--verde);outline:none}
 .ob svg{width:20px;height:20px}
 .list{display:grid;gap:20px}
@@ -157,7 +160,8 @@ button{font:inherit;color:inherit}
 .card.top{border-color:var(--verde);scroll-margin-top:20px}
 .card.cambia{animation:entra .3s ease}
 @keyframes entra{from{opacity:.4}to{opacity:1}}
-.selnota{margin:0;color:var(--verde);font-weight:600;font-size:14px}
+.prow{display:flex;align-items:center;flex-wrap:wrap;column-gap:18px;padding-right:44px} /* precio y, en la tarjeta de arriba, "Seleccionado en el mapa" a su derecha */
+.selnota{margin:0;color:var(--verde);font:800 20.4px/1.05 var(--display);letter-spacing:-.03em;white-space:nowrap} /* 0.6 del tamaño del precio, en una sola línea */
 .pic{position:relative;overflow:hidden;border-right:1px solid var(--blanco)} /* línea vertical color 3 entre imagen y contenido */
 .pic img,.pic .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph{display:grid;place-items:center;background:var(--negro)}
@@ -269,8 +273,8 @@ button.vm{width:100%;background:none;border:0;border-top:1px solid var(--linea);
       <div class="panel" role="group" aria-label="Precio">
         <button class="opt" type="button" id="p-any" role="option" aria-selected="true"><span class="radio"></span>Cualquier precio</button>
         <div class="mons" role="radiogroup" aria-label="Moneda">
-          <button class="mo" type="button" role="radio" data-m="USD" aria-selected="true"><span class="radio"></span>USD</button>
-          <button class="mo" type="button" role="radio" data-m="PEN" aria-selected="false"><span class="radio"></span>Soles</button>
+          <button class="mo" type="button" role="radio" data-m="USD" aria-selected="false" title="Dólar de Estados Unidos"><span class="radio"></span>USD</button>
+          <button class="mo" type="button" role="radio" data-m="PEN" aria-selected="true" title="Sol peruano"><span class="radio"></span>Soles</button>
         </div>
         <div class="rango">
           <input class="num" id="p-desde" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" placeholder="Desde" autocomplete="off" aria-label="Precio desde">
@@ -314,15 +318,30 @@ button.vm{width:100%;background:none;border:0;border-top:1px solid var(--linea);
 const WA='51903307861';
 const LATAM=[[-56,-118],[32,-34]]; // vista inicial: Latinoamérica
 const props=[
- {id:1,img:'depto1.webp',op:'alquiler',tipo:'Departamento',precio:2350,mon:'S/',un:12,dorm:'1 a 2 dorm.',m2:'45 a 61 m² tot.',dir:'Av. Brasil 1840',zona:'Jesús María, Lima',am:['Gimnasio','Piscina','Parrilla','Áreas verdes'],desc:'Departamentos de 1 y 2 dormitorios diseñados para brindar comodidad, ubicación y seguridad cerca del centro de Lima.',lat:-12.0700,lng:-77.0530},
- {id:2,img:'depto2.webp',op:'alquiler',tipo:'Departamento',precio:2800,mon:'S/',un:8,dorm:'2 dorm.',m2:'58 a 64 m² tot.',dir:'Av. Larco 1150',zona:'Miraflores, Lima',am:['Gimnasio','Parrilla'],desc:'Ven a conocer nuestros departamentos de estreno de 2 dormitorios con balcón y excelente iluminación natural.',lat:-12.1190,lng:-77.0300},
- {id:3,img:'depto3.webp',op:'alquiler',tipo:'Departamento',precio:1900,mon:'S/',un:20,dorm:'1 dorm.',m2:'38 a 45 m² tot.',dir:'Jr. Cusco 450',zona:'Cercado de Lima, Lima',am:['Áreas verdes'],desc:'Departamentos de 1 dormitorio, ideales para una persona o pareja, cerca de universidades y comercios.',lat:-12.0453,lng:-77.0311},
- {id:4,img:'depto4.webp',op:'alquiler',tipo:'Departamento',precio:3600,mon:'S/',un:6,dorm:'3 dorm.',m2:'85 a 98 m² tot.',dir:'Av. Camino Real 1050',zona:'San Isidro, Lima',am:['Piscina','Parrilla','Áreas verdes'],desc:'Amplios departamentos familiares de 3 dormitorios con cochera y zona de parrillas en la azotea.',lat:-12.1000,lng:-77.0380},
- {id:5,img:'depto5.webp',op:'venta',tipo:'Departamento',precio:135000,mon:'US$',un:10,dorm:'2 dorm.',m2:'60 a 72 m² tot.',dir:'Av. Sucre 760',zona:'Magdalena del Mar, Lima',am:['Gimnasio','Áreas verdes'],desc:'Departamentos en venta con acabados modernos y facilidades de pago con crédito hipotecario.',lat:-12.0900,lng:-77.0710},
- {id:6,img:'depto6.webp',op:'venta',tipo:'Casa',precio:320000,mon:'US$',un:1,dorm:'4 dorm.',m2:'180 m² tot.',dir:'Jr. Domeyer 280',zona:'Barranco, Lima',am:['Parrilla','Áreas verdes'],desc:'Casa de dos pisos con jardín, cochera para dos autos y terraza con parrilla.',lat:-12.1400,lng:-77.0200}
+ {id:1,img:'depto1.webp',op:'alquiler',tipo:'Departamento',precio:2350,mon:'S/',m2:61,dorm:2,ban:1,dir:'Av. Brasil 1840',zona:'Jesús María, Lima',am:['Gimnasio','Piscina','Parrilla','Áreas verdes'],desc:'Departamentos de 1 y 2 dormitorios diseñados para brindar comodidad, ubicación y seguridad cerca del centro de Lima.',lat:-12.0700,lng:-77.0530},
+ {id:2,img:'depto2.webp',op:'alquiler',tipo:'Departamento',precio:2800,mon:'S/',m2:64,dorm:2,ban:2,dir:'Av. Larco 1150',zona:'Miraflores, Lima',am:['Gimnasio','Parrilla'],desc:'Ven a conocer nuestros departamentos de estreno de 2 dormitorios con balcón y excelente iluminación natural.',lat:-12.1190,lng:-77.0300},
+ {id:3,img:'depto3.webp',op:'alquiler',tipo:'Departamento',precio:1900,mon:'S/',m2:45,dorm:1,ban:1,dir:'Jr. Cusco 450',zona:'Cercado de Lima, Lima',am:['Áreas verdes'],desc:'Departamentos de 1 dormitorio, ideales para una persona o pareja, cerca de universidades y comercios.',lat:-12.0453,lng:-77.0311},
+ {id:4,img:'depto4.webp',op:'alquiler',tipo:'Departamento',precio:3600,mon:'S/',m2:98,dorm:3,ban:3,dir:'Av. Camino Real 1050',zona:'San Isidro, Lima',am:['Piscina','Parrilla','Áreas verdes'],desc:'Amplios departamentos familiares de 3 dormitorios con cochera y zona de parrillas en la azotea.',lat:-12.1000,lng:-77.0380},
+ {id:5,img:'depto5.webp',op:'venta',tipo:'Departamento',precio:510000,mon:'S/',m2:72,dorm:2,ban:2,dir:'Av. Sucre 760',zona:'Magdalena del Mar, Lima',am:['Gimnasio','Áreas verdes'],desc:'Departamentos en venta con acabados modernos y facilidades de pago con crédito hipotecario.',lat:-12.0900,lng:-77.0710},
+ {id:6,img:'casa1.webp',op:'alquiler',tipo:'Casa',precio:5800,mon:'S/',m2:180,dorm:4,ban:3,dir:'Jr. Domeyer 280',zona:'Barranco, Lima',am:['Parrilla','Áreas verdes'],desc:'Casa de dos pisos con jardín, cochera para dos autos y terraza con parrilla.',lat:-12.1400,lng:-77.0200},
+ {id:7,img:'terreno1.webp',op:'alquiler',tipo:'Terreno',precio:2500,mon:'S/',m2:300,dir:'Av. Los Cipreses 300',zona:'La Molina, Lima',am:[],desc:'Terreno plano y cercado, con agua y luz en el límite, ideal para almacén o proyecto temporal.',lat:-12.0850,lng:-76.9050},
+ {id:8,img:'oficina1.webp',op:'alquiler',tipo:'Oficina',precio:3200,mon:'S/',m2:85,ban:2,dir:'Av. Javier Prado Este 480',zona:'San Isidro, Lima',am:['Gimnasio'],desc:'Oficina moderna con recepción, sala de reuniones y vista a la avenida, en edificio con seguridad.',lat:-12.0935,lng:-77.0270},
+ {id:9,img:'local1.webp',op:'alquiler',tipo:'Local comercial',precio:6500,mon:'S/',m2:120,ban:1,dir:'Av. Benavides 1580',zona:'Miraflores, Lima',am:[],desc:'Local a pie de calle con vitrina amplia y alto tránsito peatonal, listo para instalar tu negocio.',lat:-12.1275,lng:-77.0225},
+ {id:10,img:'industrial1.webp',op:'alquiler',tipo:'Local industrial',precio:12000,mon:'S/',m2:600,ban:2,dir:'Av. Argentina 3200',zona:'Callao, Lima',am:[],desc:'Galpón con techo alto, piso reforzado, patio de maniobras y acceso para camiones.',lat:-12.0480,lng:-77.1180},
+ {id:11,img:'cochera1.webp',op:'alquiler',tipo:'Cochera',precio:450,mon:'S/',m2:15,dir:'Jr. Schell 320',zona:'Miraflores, Lima',am:[],desc:'Cochera techada y con vigilancia las 24 horas, a pocos pasos del parque Kennedy.',lat:-12.1215,lng:-77.0290},
+ {id:12,img:'depto7.webp',op:'venta',tipo:'Departamento',precio:420000,mon:'S/',m2:55,dorm:2,ban:1,dir:'Av. Arequipa 2450',zona:'Lince, Lima',am:['Gimnasio'],desc:'Departamento de 2 dormitorios en piso alto, con balcón y buena iluminación, cerca de todo.',lat:-12.0860,lng:-77.0340},
+ {id:13,img:'depto8.webp',op:'venta',tipo:'Departamento',precio:890000,mon:'S/',m2:95,dorm:3,ban:2,dir:'Av. Pardo 620',zona:'Miraflores, Lima',am:['Gimnasio','Piscina','Áreas verdes'],desc:'Departamento de 3 dormitorios con acabados de lujo, a pasos del malecón y del parque Kennedy.',lat:-12.1230,lng:-77.0300},
+ {id:14,img:'depto9.webp',op:'venta',tipo:'Departamento',precio:360000,mon:'S/',m2:48,dorm:1,ban:1,dir:'Av. La Marina 1180',zona:'San Miguel, Lima',am:['Parrilla','Áreas verdes'],desc:'Departamento de 1 dormitorio ideal para primera vivienda o inversión, con financiamiento hipotecario.',lat:-12.0770,lng:-77.0900},
+ {id:15,img:'casa2.webp',op:'venta',tipo:'Casa',precio:1650000,mon:'S/',m2:220,dorm:4,ban:4,dir:'Av. El Polo 540',zona:'Santiago de Surco, Lima',am:['Piscina','Parrilla','Áreas verdes'],desc:'Casa en condominio cerrado con jardín, piscina, cochera para tres autos y vigilancia permanente.',lat:-12.1050,lng:-76.9800},
+ {id:16,img:'terreno2.webp',op:'venta',tipo:'Terreno',precio:780000,mon:'S/',m2:400,dir:'Av. Separadora Industrial 900',zona:'Ate, Lima',am:[],desc:'Terreno plano y esquinero, con título de propiedad y zonificación comercial, listo para construir.',lat:-12.0450,lng:-76.9500},
+ {id:17,img:'oficina2.webp',op:'venta',tipo:'Oficina',precio:1200000,mon:'S/',m2:110,ban:2,dir:'Av. República de Panamá 3050',zona:'San Isidro, Lima',am:['Gimnasio'],desc:'Oficina en edificio corporativo, con 3 cocheras, recepción y salas de reuniones compartidas.',lat:-12.1010,lng:-77.0360},
+ {id:18,img:'local2.webp',op:'venta',tipo:'Local comercial',precio:1500000,mon:'S/',m2:80,ban:1,dir:'Av. Petit Thouars 5200',zona:'Miraflores, Lima',am:[],desc:'Local en avenida principal con frente amplio y sótano de depósito, de alta rotación comercial.',lat:-12.1180,lng:-77.0270},
+ {id:19,img:'industrial2.webp',op:'venta',tipo:'Local industrial',precio:3800000,mon:'S/',m2:800,ban:3,dir:'Av. Nicolás Ayllón 2800',zona:'Ate, Lima',am:[],desc:'Galpón con oficinas administrativas, andén de carga, techo alto y energía trifásica.',lat:-12.0400,lng:-76.9900},
+ {id:20,img:'cochera2.webp',op:'venta',tipo:'Cochera',precio:55000,mon:'S/',m2:14,dir:'Av. Salaverry 1900',zona:'Jesús María, Lima',am:[],desc:'Cochera en sótano con acceso controlado y vigilancia, para un auto mediano.',lat:-12.0850,lng:-77.0520}
 ];
 const plural={Departamento:'departamentos',Casa:'casas',Terreno:'terrenos','Local comercial':'locales comerciales',Oficina:'oficinas',Cochera:'cocheras','Local industrial':'locales industriales'};
-const TC=3.75; // tipo de cambio: soles por 1 dólar (para comparar propiedades de otra moneda con el rango)
+const TC=3.33;
+const redondear=(v,aMoneda)=>aMoneda==='USD'?Math.ceil(v-1e-9):Math.floor(v+1e-9);
 const I={
  heart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/></svg>',
  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
@@ -331,8 +350,7 @@ const I={
 const $=s=>document.querySelector(s);
 const fmt=n=>n.toLocaleString('en-US');
 const wa=t=>'https://wa.me/'+WA+'?text='+encodeURIComponent(t);
-const estado={op:'alquiler',tipo:'Departamento',mon:'USD',desde:0,hasta:0,zona:null,zonaNombre:'',am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
-const compacto=n=>n>=1e6?(Math.floor(n/1e5)/10)+'M':n>=1e5?Math.floor(n/1e3)+'K':fmt(n); // 5589600 → 5.5M, 135000 → 135K
+const estado={op:'alquiler',tipo:'Departamento',mon:'PEN',desde:0,hasta:0,zona:null,zonaNombre:'',am:[],orden:-1}; // orden: -1 = mayor precio (por defecto), 1 = menor precio
 let fav=new Set(), mapa=null, capa=null, marcas={}, visibles=[], selId=null;
 
 /* mapa real: Leaflet + mapa oscuro de CARTO (datos de OpenStreetMap), centrado en Lima */
@@ -364,7 +382,7 @@ function pintar(r){
       return;
     }
     const p=g[0];
-    const m=L.marker([p.lat,p.lng],{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="pin">${p.mon} ${compacto(p.precio)}</span>`})}).addTo(capa);
+    const m=L.marker([p.lat,p.lng],{keyboard:false,icon:L.divIcon({className:'pinwrap',iconSize:[0,0],html:`<span class="pin">${monSim()} ${fmt(pv(p))}</span>`})}).addTo(capa);
     const pin=m.getElement().querySelector('.pin');
     if(p.id===selId)pin.classList.add('sel');
     // al pasar el mouse (o tocar) un precio, la tarjeta de arriba cambia a esa propiedad; la página no se mueve
@@ -405,12 +423,10 @@ const cardHTML=(p,top)=>`
       </div>
       <div class="body">
         <button class="heart" type="button" aria-label="Guardar en favoritos" aria-pressed="${fav.has(p.id)}">${I.heart}</button>
-        ${top?`<p class="selnota">Seleccionado en el mapa</p>`:`<p class="eyebrow">${plural[p.tipo]} desde</p>`}
-        <p class="price">${p.mon} ${fmt(p.precio)}</p>
-        <div class="spec"><span>${p.un} un.</span><span>${p.dorm}</span><span>${p.m2}</span></div>
+        <div class="prow"><p class="price">${precioTxt(p)}</p>${top?'<p class="selnota">Seleccionado en el mapa</p>':''}</div>
+        <div class="spec"><span>${p.m2} m² tot.</span>${p.dorm!=null?`<span>${p.dorm} dorm.</span>`:''}${p.ban!=null?`<span>${p.ban} ${p.ban===1?'baño':'baños'}</span>`:''}</div>
         <p class="addr">${p.dir}</p>
         <p class="zona">${p.zona}</p>
-        <div class="chips">${p.am.map(a=>`<span>${a}</span>`).join('')}</div>
         <p class="desc">${p.desc}</p>
         <div class="foot">
           <div class="acts">
@@ -423,14 +439,19 @@ const cardHTML=(p,top)=>`
 
 // precio de la propiedad expresado en la moneda elegida (USD o PEN)
 const valorEn=(p,m)=>{const usd=p.mon==='US$';return m==='USD'?(usd?p.precio:p.precio/TC):(usd?p.precio*TC:p.precio)};
+// precio mostrado en la moneda elegida en Precio (Soles o USD): lo usan las tarjetas, el mapa y el rango
+const monSim=()=>estado.mon==='USD'?'US$':'S/';
+const pv=p=>redondear(valorEn(p,estado.mon),estado.mon);
+const precioTxt=p=>`${monSim()} ${fmt(pv(p))}`;
 function render(){
   const {op,tipo,desde,hasta,mon,am}=estado, zona=estado.zona;
   const r=props.filter(p=>p.op===op&&p.tipo===tipo&&(!desde||valorEn(p,mon)>=desde)&&(!hasta||valorEn(p,mon)<=hasta)&&(!zona||zona.contains([p.lat,p.lng]))&&am.every(a=>p.am.includes(a)));
   r.sort((a,b)=>(a.precio-b.precio)*estado.orden);
   visibles=r;
   if(!r.some(x=>x.id===selId))selId=r.length?r[0].id:null;
-  const nom=r.length===1?tipo.toLowerCase():plural[tipo];
-  $('#titulo').textContent=`${r.length} ${nom} en ${op} en ${zona?(estado.zonaNombre||'esta zona'):'Lima'}`;
+  const may=t=>t.charAt(0).toUpperCase()+t.slice(1); // primera letra de cada elemento elegido en mayúscula
+  const nom=may(r.length===1?tipo:plural[tipo]);
+  $('#titulo').textContent=`${r.length} ${nom} en ${may(op)} en ${zona?may(estado.zonaNombre||'esta zona'):'Lima'}`;
   $('#list').innerHTML=r.length?r.map(p=>cardHTML(p,false)).join(''):
     `<div class="vacio">No hay propiedades con estos filtros. Cambia la búsqueda o <a href="${wa('Hola, busco una propiedad en Lima y no la encuentro en la página')}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>.</div>`;
   pintar(r);
@@ -487,7 +508,7 @@ Object.keys(DD).forEach(k=>{
 (function(){
   const f=$('#dd-precio'),desde=$('#p-desde'),hasta=$('#p-hasta'),any=$('#p-any'),ver=$('#p-ver'),lbl=f.querySelector('.lbl');
   let monB=estado.mon; // moneda marcada en el panel (se aplica al pulsar "Ver resultados")
-  const sim=()=>monB==='USD'?'USD':'S/';
+  const sim=()=>monB==='USD'?'US$':'S/';
   function actualizar(){
     // el botón muestra lo que se escribe: S/ 1+  /  S/ 1 - S/ 5  /  Hasta S/ 5
     const d=+desde.value||0,h=+hasta.value||0,s=sim();
@@ -501,9 +522,17 @@ Object.keys(DD).forEach(k=>{
   }
   btn(f).addEventListener('click',()=>{if(!f.classList.contains('open'))sincronizar();alternar('precio')});
   any.addEventListener('click',()=>{
-    estado.desde=estado.hasta=0;estado.mon='USD';sincronizar();cerrar();btn(f).focus();render();
+    estado.desde=estado.hasta=0;sincronizar();cerrar();btn(f).focus();render();
   });
-  f.querySelectorAll('.mo').forEach(b=>b.addEventListener('click',()=>{monB=b.dataset.m;actualizar()}));
+  // la moneda se aplica al instante: cambian los precios de toda la página y el rango (aplicado o escrito) se convierte con TC
+  f.querySelectorAll('.mo').forEach(b=>b.addEventListener('click',()=>{
+    const nueva=b.dataset.m;if(nueva===monB)return;
+    const k=nueva==='USD'?1/TC:TC,cv=n=>n?Math.max(1,redondear(n*k,nueva)):0;
+    if(desde.value)desde.value=String(cv(+desde.value));
+    if(hasta.value)hasta.value=String(cv(+hasta.value));
+    estado.desde=cv(estado.desde);estado.hasta=cv(estado.hasta);
+    monB=estado.mon=nueva;actualizar();render();
+  }));
   [desde,hasta].forEach(el=>{
     // solo números: se bloquea cualquier otro carácter al escribir y se limpia al pegar
     el.addEventListener('beforeinput',e=>{if(e.data&&/\D/.test(e.data))e.preventDefault()});
